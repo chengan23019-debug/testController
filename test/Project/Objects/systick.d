@@ -39,3 +39,13 @@
 .\objects\systick.o: ..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_ipa.h
 .\objects\systick.o: ..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_tli.h
 .\objects\systick.o: ..\User\systick.h
+.\objects\systick.o: ..\FreeRTOS\include\FreeRTOS.h
+.\objects\systick.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+.\objects\systick.o: ..\User\FreeRTOSConfig.h
+.\objects\systick.o: ..\FreeRTOS\include\projdefs.h
+.\objects\systick.o: ..\FreeRTOS\include\portable.h
+.\objects\systick.o: ..\FreeRTOS\include\deprecated_definitions.h
+.\objects\systick.o: ..\FreeRTOS\portable\RVDS\ARM_CM4F\portmacro.h
+.\objects\systick.o: ..\FreeRTOS\include\mpu_wrappers.h
+.\objects\systick.o: ..\FreeRTOS\include\task.h
+.\objects\systick.o: ..\FreeRTOS\include\list.h

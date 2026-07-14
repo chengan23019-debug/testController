@@ -1,5 +1,5 @@
-.\objects\bsp_cs1237.o: ..\User\bsp_cs1237.c
-.\objects\bsp_cs1237.o: ..\User\bsp_cs1237.h
+.\objects\bsp_cs1237.o: ..\Hardware\cs1237\bsp_cs1237.c
+.\objects\bsp_cs1237.o: ..\Hardware\cs1237\bsp_cs1237.h
 .\objects\bsp_cs1237.o: ..\Firmware\CMSIS\GD\GD32F4xx\Include\gd32f4xx.h
 .\objects\bsp_cs1237.o: ..\Firmware\CMSIS\core_cm4.h
 .\objects\bsp_cs1237.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h

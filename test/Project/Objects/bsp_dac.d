@@ -1,5 +1,5 @@
-.\objects\bsp_dac.o: ..\User\bsp_dac.c
-.\objects\bsp_dac.o: ..\User\bsp_dac.h
+.\objects\bsp_dac.o: ..\Hardware\dac\bsp_dac.c
+.\objects\bsp_dac.o: ..\Hardware\dac\bsp_dac.h
 .\objects\bsp_dac.o: ..\Firmware\CMSIS\GD\GD32F4xx\Include\gd32f4xx.h
 .\objects\bsp_dac.o: ..\Firmware\CMSIS\core_cm4.h
 .\objects\bsp_dac.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h

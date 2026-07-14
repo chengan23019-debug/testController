@@ -34,8 +34,8 @@ OF SUCH DAMAGE.
 
 #include "gd32f4xx.h"
 #include "systick.h"
-
-volatile static uint32_t delay;
+#include "FreeRTOS.h"
+#include "task.h"
 
 /*!
     \brief    configure systick
@@ -45,14 +45,9 @@ volatile static uint32_t delay;
 */
 void systick_config(void)
 {
-    /* setup systick timer for 1000Hz interrupts */
-    if(SysTick_Config(SystemCoreClock / 1000U)) {
-        /* capture error */
-        while(1) {
-        }
-    }
-    /* configure the systick handler priority */
-    NVIC_SetPriority(SysTick_IRQn, 0x00U);
+    /* Handled automatically by FreeRTOS when starting the scheduler.
+     * We keep an empty function here for compatibility with existing code.
+     */
 }
 
 /*!
@@ -63,21 +58,17 @@ void systick_config(void)
 */
 void delay_1ms(uint32_t count)
 {
-    delay = count;
-
-    while(0U != delay) {
+    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+        vTaskDelay(pdMS_TO_TICKS(count));
+    } else {
+        /* Pre-scheduler loop delay: GD32F470 CPU clock is typically 240MHz.
+           A loop of about 30000 cycles is roughly 1ms when compiler optimization is off/low. */
+        volatile uint32_t i;
+        while (count--) {
+            for (i = 0; i < 30000; i++) {
+                __NOP();
+            }
+        }
     }
 }
 
-/*!
-    \brief    delay decrement
-    \param[in]  none
-    \param[out] none
-    \retval     none
-*/
-void delay_decrement(void)
-{
-    if(0U != delay) {
-        delay--;
-    }
-}
