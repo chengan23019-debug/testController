@@ -6,7 +6,7 @@
 /* GPIO Pin Configuration for CS1237 */
 #define CS1237_CLK_RCU       RCU_GPIOC
 #define CS1237_CLK_PORT      GPIOC
-#define CS1237_CLK_PIN       GPIO_PIN_1
+#define CS1237_CLK_PIN       GPIO_PIN_3
 
 #define CS1237_DOUT_RCU      RCU_GPIOC
 #define CS1237_DOUT_PORT     GPIOC

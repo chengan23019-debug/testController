@@ -173,7 +173,7 @@ static void cs1237_task(void *pvParameters)
         }
         
         /* Yield CPU to allow other tasks to run. CS1237 is 10Hz, so 20ms delay is safe and efficient. */
-        delay_1ms(20);
+        delay_1ms(1000);
     }
 }
 

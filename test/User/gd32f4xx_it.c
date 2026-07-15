@@ -154,3 +154,32 @@ void SysTick_Handler(void)
     delay_decrement();
 }
 */
+
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "gd32f4xx_enet.h"
+
+extern xSemaphoreHandle g_rx_semaphore;
+
+/*!
+    \brief      this function handles ethernet interrupt request
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void ENET_IRQHandler(void)
+{
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+
+    /* Frame received */
+    if(SET == enet_interrupt_flag_get(ENET_DMA_INT_FLAG_RS)) {
+        /* Give the semaphore to wake up the receive task */
+        xSemaphoreGiveFromISR(g_rx_semaphore, &xHigherPriorityTaskWoken);
+    }
+
+    /* Clear ENET DMA Rx interrupt pending bits */
+    enet_interrupt_flag_clear(ENET_DMA_INT_FLAG_RS_CLR);
+    enet_interrupt_flag_clear(ENET_DMA_INT_FLAG_NI_CLR);
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}

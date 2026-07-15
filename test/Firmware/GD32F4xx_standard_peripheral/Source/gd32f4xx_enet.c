@@ -361,62 +361,68 @@ ErrStatus enet_init(enet_mediamode_enum mediamode, enet_chksumconf_enum checksum
         } while((RESET == phy_value) && (timeout < PHY_READ_TO));
         /* return ERROR due to timeout */
         if(PHY_READ_TO == timeout) {
-            return enet_state;
-        }
-        /* reset timeout counter */
-        timeout = 0U;
+            /* Default fallback to 100M Full Duplex if link is down, enabling auto-negotiation in background */
+            phy_value = PHY_AUTONEGOTIATION;
+            enet_phy_write_read(ENET_PHY_WRITE, PHY_ADDRESS, PHY_REG_BCR, &phy_value);
+            media_temp = ENET_MODE_FULLDUPLEX | ENET_SPEEDMODE_100M;
+        } else {
+            /* reset timeout counter */
+            timeout = 0U;
 
-        /* enable auto-negotiation */
-        phy_value = PHY_AUTONEGOTIATION;
-        phy_state = enet_phy_write_read(ENET_PHY_WRITE, PHY_ADDRESS, PHY_REG_BCR, &phy_value);
-        if(!phy_state) {
-            /* return ERROR due to write timeout */
-            return enet_state;
-        }
+            /* enable auto-negotiation */
+            phy_value = PHY_AUTONEGOTIATION;
+            phy_state = enet_phy_write_read(ENET_PHY_WRITE, PHY_ADDRESS, PHY_REG_BCR, &phy_value);
+            if(!phy_state) {
+                /* return ERROR due to write timeout */
+                return enet_state;
+            }
 
-        /* wait for the PHY_AUTONEGO_COMPLETE bit be set */
-        do {
-            enet_phy_write_read(ENET_PHY_READ, PHY_ADDRESS, PHY_REG_BSR, &phy_value);
-            phy_value &= PHY_AUTONEGO_COMPLETE;
-            timeout++;
-        } while((RESET == phy_value) && (timeout < (uint32_t)PHY_READ_TO));
-        /* return ERROR due to timeout */
-        if(PHY_READ_TO == timeout) {
-            return enet_state;
-        }
-        /* reset timeout counter */
-        timeout = 0U;
+            /* wait for the PHY_AUTONEGO_COMPLETE bit be set */
+            do {
+                enet_phy_write_read(ENET_PHY_READ, PHY_ADDRESS, PHY_REG_BSR, &phy_value);
+                phy_value &= PHY_AUTONEGO_COMPLETE;
+                timeout++;
+            } while((RESET == phy_value) && (timeout < (uint32_t)PHY_READ_TO));
+            
+            /* If auto-negotiation times out, default to 100M Full Duplex */
+            if(PHY_READ_TO == timeout) {
+                media_temp = ENET_MODE_FULLDUPLEX | ENET_SPEEDMODE_100M;
+            } else {
+                /* reset timeout counter */
+                timeout = 0U;
 
-        /* read the result of the auto-negotiation */
-        enet_phy_write_read(ENET_PHY_READ, PHY_ADDRESS, PHY_SR, &phy_value);
+                /* read the result of the auto-negotiation */
+                enet_phy_write_read(ENET_PHY_READ, PHY_ADDRESS, PHY_SR, &phy_value);
 
 #if(PHY_TYPE == SR8201F || PHY_TYPE == YT8512)
-        /* configure the duplex mode of MAC following the auto-negotiation result */
-        if((uint16_t)RESET != (phy_value & PHY_DUPLEX_STATUS)) {
-            media_temp = ENET_MODE_FULLDUPLEX;
-        } else {
-            media_temp = ENET_MODE_HALFDUPLEX;
-        }
-        /* configure the communication speed of MAC following the auto-negotiation result */
-        if((uint16_t)RESET !=(phy_value & PHY_SPEED_STATUS)){
-            media_temp |= ENET_SPEEDMODE_100M;
-        }else{
-            media_temp |= ENET_SPEEDMODE_10M;
-        }
+                /* configure the duplex mode of MAC following the auto-negotiation result */
+                if((uint16_t)RESET != (phy_value & PHY_DUPLEX_STATUS)) {
+                    media_temp = ENET_MODE_FULLDUPLEX;
+                } else {
+                    media_temp = ENET_MODE_HALFDUPLEX;
+                }
+                /* configure the communication speed of MAC following the auto-negotiation result */
+                if((uint16_t)RESET !=(phy_value & PHY_SPEED_STATUS)){
+                    media_temp |= ENET_SPEEDMODE_100M;
+                }else{
+                    media_temp |= ENET_SPEEDMODE_10M;
+                }
 #elif (PHY_TYPE == DP83848 || PHY_TYPE == LAN8700)
-        /* configure the duplex mode of MAC following the auto-negotiation result */
-        if((uint16_t)RESET != (phy_value & PHY_DUPLEX_STATUS)) {
-            media_temp = ENET_MODE_FULLDUPLEX;
-        } else {
-            media_temp = ENET_MODE_HALFDUPLEX;
-        }
-        /* configure the communication speed of MAC following the auto-negotiation result */
-        if((uint16_t)RESET !=(phy_value & PHY_SPEED_STATUS)){
-            media_temp |= ENET_SPEEDMODE_10M;
-        }else{
-            media_temp |= ENET_SPEEDMODE_100M;
-        }
+                /* configure the duplex mode of MAC following the auto-negotiation result */
+                if((uint16_t)RESET != (phy_value & PHY_DUPLEX_STATUS)) {
+                    media_temp = ENET_MODE_FULLDUPLEX;
+                } else {
+                    media_temp = ENET_MODE_HALFDUPLEX;
+                }
+                /* configure the communication speed of MAC following the auto-negotiation result */
+                if((uint16_t)RESET !=(phy_value & PHY_SPEED_STATUS)){
+                    media_temp |= ENET_SPEEDMODE_10M;
+                }else{
+                    media_temp |= ENET_SPEEDMODE_100M;
+                }
 #endif /* PHY_TYPE == SR8201F || PHY_TYPE == YT8512 */
+            }
+        }
     } else {
         phy_value = (uint16_t)((media_temp & ENET_MAC_CFG_DPM) >> 3);
         phy_value |= (uint16_t)((media_temp & ENET_MAC_CFG_SPD) >> 1);
@@ -1549,6 +1555,8 @@ ErrStatus enet_phy_config(void)
     uint32_t reg;
     uint16_t phy_value;
     ErrStatus enet_state = ERROR;
+    uint16_t ext_addr;
+    uint16_t ext_val;
 
     /* clear the previous MDC clock */
     reg = ENET_MAC_PHY_CTL;
@@ -1588,6 +1596,15 @@ ErrStatus enet_phy_config(void)
 
     /* PHY reset complete */
     if(RESET == (phy_value & PHY_RESET)) {
+        /* Enable YT8512C 50MHz RMII clock output (extended register 0x50, bit 6 = 1) */
+        ext_addr = 0x50;
+        ext_val = 0;
+        if(SUCCESS == enet_phy_write_read(ENET_PHY_WRITE, PHY_ADDRESS, 0x1E, &ext_addr)) {
+            if(SUCCESS == enet_phy_write_read(ENET_PHY_READ, PHY_ADDRESS, 0x1F, &ext_val)) {
+                ext_val |= 0x0040;
+                enet_phy_write_read(ENET_PHY_WRITE, PHY_ADDRESS, 0x1F, &ext_val);
+            }
+        }
         enet_state = SUCCESS;
     }
 

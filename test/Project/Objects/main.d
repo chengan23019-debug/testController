@@ -53,3 +53,5 @@
 .\objects\main.o: ..\FreeRTOS\include\task.h
 .\objects\main.o: ..\FreeRTOS\include\list.h
 .\objects\main.o: ..\App\app_cs1237.h
+.\objects\main.o: ..\Hardware\enet\bsp_enet.h
+.\objects\main.o: ..\User\net_dhcp.h

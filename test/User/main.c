@@ -41,6 +41,8 @@ OF SUCH DAMAGE.
 #include "FreeRTOS.h"
 #include "task.h"
 #include "app_cs1237.h"
+#include "bsp_enet.h"
+#include "net_dhcp.h"
 
 /*!
     \brief    main function
@@ -52,6 +54,7 @@ int main(void)
 {
     systick_config();
     usart_debug_init(115200);
+    bsp_enet_init();
     
     /* Initialize LED Pin (PD7) */
     rcu_periph_clock_enable(RCU_GPIOD);
@@ -59,7 +62,10 @@ int main(void)
     gpio_output_options_set(GPIOD, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_7);
 
     /* Create the CS1237 Task */
-    app_cs1237_task_create();
+    // app_cs1237_task_create();
+
+    /* Create the lwIP network task */
+    app_net_task_create();
 
     /* Start FreeRTOS scheduler */
     printf("Starting FreeRTOS Scheduler...\r\n");

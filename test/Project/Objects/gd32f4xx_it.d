@@ -41,3 +41,15 @@
 .\objects\gd32f4xx_it.o: ..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_tli.h
 .\objects\gd32f4xx_it.o: ..\User\main.h
 .\objects\gd32f4xx_it.o: ..\User\systick.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\FreeRTOS.h
+.\objects\gd32f4xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
+.\objects\gd32f4xx_it.o: ..\User\FreeRTOSConfig.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\projdefs.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\portable.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\deprecated_definitions.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\portable\RVDS\ARM_CM4F\portmacro.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\mpu_wrappers.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\semphr.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\queue.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\task.h
+.\objects\gd32f4xx_it.o: ..\FreeRTOS\include\list.h
