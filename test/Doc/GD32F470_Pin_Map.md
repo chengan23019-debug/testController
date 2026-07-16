@@ -13,7 +13,7 @@
 | 3 | **PA4** | **DAC0_OUT0** | 模拟模式 (Analog) | 输出 | - | 模拟电压输出通道 0 (DAC0) |
 | 4 | **PA5** | **DAC0_OUT1** | 模拟模式 (Analog) | 输出 | - | 模拟电压输出通道 1 (DAC1) |
 | 5 | **PC1** | **CS1237 ADC** | 普通输出 (GPIO Output) | 输出 (Push-Pull) | LOW | ADC 串行时钟线 (SCLK)，输出时钟脉冲 |
-| 6 | **PC2** | **CS1237 ADC** | 双向输入输出 (GPIO) | 输入(上拉) / 输出 | - | ADC 串行 data 线 (DOUT/DRDY)，收发数据与检测就绪 |
+| 6 | **PC2** | **CS1237 ADC** | 双向输入输出 (GPIO) | 输入(上拉) / 输出 | - | ADC 串行数据线 (DOUT/DRDY)，收发数据与检测就绪 |
 | 7 | **PD7** | **LED2** | 普通输出 (GPIO Output) | 输出 (Push-Pull) | - | 板载 LED2 控制脚，用于指示运行状态 |
 | 8 | **PB11** | **HLW8112** | 普通输出 (GPIO Output) | 输出 (Push-Pull) | HIGH | 芯片使能/复位引脚 (EN/RSTN)，高电平使能，低电平复位 |
 | 9 | **PB12** | **HLW8112** | 普通输出 (GPIO Output) | 输出 (Push-Pull) | HIGH | 模拟 SPI 片选线 (SCSN)，拉低以启动通信 |

@@ -41,6 +41,7 @@ OF SUCH DAMAGE.
 #include "FreeRTOS.h"
 #include "task.h"
 #include "app_cs1237.h"
+#include "app_hlw8112.h"
 
 /*!
     \brief    main function
@@ -60,6 +61,9 @@ int main(void)
 
     /* Create the CS1237 Task */
     app_cs1237_task_create();
+
+    /* Create the HLW8112 Task */
+    app_hlw8112_task_create();
 
     /* Start FreeRTOS scheduler */
     printf("Starting FreeRTOS Scheduler...\r\n");

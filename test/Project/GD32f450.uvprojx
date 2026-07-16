@@ -16,8 +16,8 @@
         <TargetCommonOption>
           <Device>GD32F470ZG</Device>
           <Vendor>GigaDevice</Vendor>
-          <PackID>GigaDevice.GD32F4xx_DFP.3.5.0</PackID>
-          <PackURL>https://gd32mcu.com</PackURL>
+          <PackID>GigaDevice.GD32F4xx_DFP.3.0.5</PackID>
+          <PackURL>https://gd32mcu.com/data/documents/pack/</PackURL>
           <Cpu>IRAM(0x20000000,0x070000) IRAM2(0x10000000,0x010000) IROM(0x08000000,0x0100000) CPUTYPE("Cortex-M4") FPU2 CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,GD32F450</Define>
               <Undefine></Undefine>
-              <IncludePath>..\User;..\Firmware\CMSIS;..\Firmware\CMSIS\GD\GD32F4xx\Include;..\Firmware\GD32F4xx_standard_peripheral\Include;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM4F;..\App;..\Hardware;..\Hardware\cs1237;..\Hardware\dac</IncludePath>
+              <IncludePath>..\User;..\Firmware\CMSIS;..\Firmware\CMSIS\GD\GD32F4xx\Include;..\Firmware\GD32F4xx_standard_peripheral\Include;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM4F;..\App;..\Hardware;..\Hardware\cs1237;..\Hardware\dac;..\Hardware\hlw8112</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -473,6 +473,11 @@
               <FileType>1</FileType>
               <FilePath>..\Hardware\dac\bsp_dac.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_hlw8112.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\hlw8112\bsp_hlw8112.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -482,6 +487,11 @@
               <FileName>app_cs1237.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\App\app_cs1237.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_hlw8112.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\App\app_hlw8112.c</FilePath>
             </File>
           </Files>
         </Group>

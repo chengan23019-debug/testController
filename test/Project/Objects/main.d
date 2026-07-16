@@ -53,3 +53,4 @@
 .\objects\main.o: ..\FreeRTOS\include\task.h
 .\objects\main.o: ..\FreeRTOS\include\list.h
 .\objects\main.o: ..\App\app_cs1237.h
+.\objects\main.o: ..\App\app_hlw8112.h
