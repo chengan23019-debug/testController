@@ -1,0 +1,43 @@
+# Keil MDK Build Output
+Project/Objects/
+Project/Listings/
+Project/.cmsis/
+*.o
+*.d
+*.crf
+*.lnp
+*.axf
+*.htm
+*.sct
+*.build_log.htm
+*.map
+*.dep
+*.uvguix.*
+*.uvguix
+*.uvoptx
+*.uvbak
+*.bak
+
+# Listing and object files
+*.lst
+*.OBJ
+*.SRC
+
+# Executables and Hex files
+*.exe
+*.hex
+*.bin
+
+# Debug/Temporary files
+*.tmp
+*.log
+
+# Embedded IDE (EIDE)
+.eide/env.ini
+.eide/log/
+build/
+
+# VS Code Intellisense & C++ extension files
+.vscode/ipch/
+.vscode/browse.vc.db
+.vscode/.browse.vc.db
