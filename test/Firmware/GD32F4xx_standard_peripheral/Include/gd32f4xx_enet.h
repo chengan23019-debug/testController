@@ -69,9 +69,10 @@ OF SUCH DAMAGE.
 #define SR8201F                          2
 #define RTL8201F                         2
 #define YT8512                           3
-#define PHY_TYPE                         DP83848
+// #define PHY_TYPE                         DP83848
+#define PHY_TYPE                         YT8512
 
-#define PHY_ADDRESS                      ((uint16_t)1U)                         /*!< phy address determined by the hardware */
+#define PHY_ADDRESS                      ((uint16_t)0U)                         /*!< phy address determined by the hardware */
 
 /* PHY read write timeouts */ 
 #define PHY_READ_TO                      ((uint32_t)0x0004FFFFU)                /*!< PHY read timeout */

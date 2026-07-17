@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,GD32F450</Define>
               <Undefine></Undefine>
-              <IncludePath>..\User;..\Firmware\CMSIS;..\Firmware\CMSIS\GD\GD32F4xx\Include;..\Firmware\GD32F4xx_standard_peripheral\Include;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM4F;..\App;..\Hardware;..\Hardware\cs1237;..\Hardware\dac;..\Hardware\hlw8112</IncludePath>
+              <IncludePath>..\User;..\Firmware\CMSIS;..\Firmware\CMSIS\GD\GD32F4xx\Include;..\Firmware\GD32F4xx_standard_peripheral\Include;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM4F;..\App;..\Hardware;..\Hardware\cs1237;..\Hardware\dac;..\Hardware\hlw8112;..\Hardware\YT8512C</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -433,6 +433,16 @@
               <FileType>1</FileType>
               <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_dac.c</FilePath>
             </File>
+            <File>
+              <FileName>gd32f4xx_enet.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_enet.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_syscfg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_syscfg.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -477,6 +487,11 @@
               <FileName>bsp_hlw8112.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Hardware\hlw8112\bsp_hlw8112.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_yt8512c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Hardware\YT8512C\bsp_yt8512c.c</FilePath>
             </File>
           </Files>
         </Group>
