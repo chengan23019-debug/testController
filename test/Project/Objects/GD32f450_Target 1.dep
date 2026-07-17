@@ -425,7 +425,7 @@ I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_ipa.h)(0x6A57108B)
 I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_tli.h)(0x6A57108B)
 F (..\Doc\readme.txt)(0x6A57108B)()
 F (..\Hardware\cs1237\bsp_cs1237.c)(0x6A57108B)(-c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\User -I ..\Firmware\CMSIS -I ..\Firmware\CMSIS\GD\GD32F4xx\Include -I ..\Firmware\GD32F4xx_standard_peripheral\Include -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM4F -I ..\App -I ..\Hardware -I ..\Hardware\cs1237 -I ..\Hardware\dac -I ..\Hardware\hlw8112-IC:\Users\PC006\AppData\Local\Arm\Packs\GigaDevice\GD32F4xx_DFP\3.0.5\Device\F4XX\Include-D__UVISION_VERSION="536" -DGD32F470 -DUSE_STDPERIPH_DRIVER -DGD32F450-o .\objects\bsp_cs1237.o --omf_browse .\objects\bsp_cs1237.crf --depend .\objects\bsp_cs1237.d)
-I (..\Hardware\cs1237\bsp_cs1237.h)(0x6A5837AB)
+I (..\Hardware\cs1237\bsp_cs1237.h)(0x6A598B3E)
 I (..\Firmware\CMSIS\GD\GD32F4xx\Include\gd32f4xx.h)(0x6A5837A3)
 I (..\Firmware\CMSIS\core_cm4.h)(0x6A57108B)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x6025237E)
@@ -587,7 +587,7 @@ I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_ipa.h)(0x6A57108B)
 I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_tli.h)(0x6A57108B)
 I (..\User\systick.h)(0x6A57108B)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x60252374)
-I (..\Hardware\cs1237\bsp_cs1237.h)(0x6A5837AB)
+I (..\Hardware\cs1237\bsp_cs1237.h)(0x6A598B3E)
 I (..\FreeRTOS\include\FreeRTOS.h)(0x6A57108B)
 I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x6025237E)
 I (..\User\FreeRTOSConfig.h)(0x6A57108B)

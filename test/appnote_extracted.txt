@@ -1,0 +1,312 @@
+
+=================== PAGE 3 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+2|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+Revision History
+Revision Release Date Summary
+1.5 2020.05.27 Modifieddocumentformat
+1.6 2020.05.28 Correctedtypos:“RGMII”waschangedto“MII/REMII/RMII”;
+Correctedtemplatetestregister0x27to0x2027;
+Correctedthevalueoftemplate10Base-Ttestregister0x200a
+1.7 2020.06.15 Corrected section 4.8.2.2: TXC of RMII1 should be an input, and added
+power-onresetsequencereminder
+1.8 2020.07.03 Addedintroductiontosleepfunction
+1.9 2020.08.03 Modifiedthedescription
+2.0 2020.08.20 Addeddescriptionsaboutphyaddr0andbroadcastaddress
+2.1 2020.11.09 Corrected section 4.8.2.2: RMII externally input 50MHz application circuit
+connectionandaddedmoredescriptions
+Addedsection4.9:avoidenteringSCANmodeduringcircuitdesign
+2.2 2020.11.26 Corrected section 4.8.2.2: RMII externally input 50MHz application circuit
+connectionandrecommendedinputclockviaXTAL_IN
+2.3 2020.12.17 Correctedthedescriptionofsection6.4:LEDconfiguration
+timing删除[hs-lll]:
+1
+1
+1
+1
+1
+=================== PAGE 4 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+3|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+BRIEF DESCRIPTION ............................................................................................ 5
+ABBREVIATIONS ....................................................................................................5
+BLOCK DIAGRAM ................................................................................................. 6
+HARDWARE CIRCUIT RELATED .........................................................................6
+4.1 POWER SUPPLY .............................................................................................................................................6
+4.2 POWER-ON SEQUENCE ..................................................................................................................................6
+4.3 CLOCK ......................................................................................................................................................... 7
+4.4 RBIAS ...........................................................................................................................................................8
+4.5 POS ............................................................................................................................................................. 8
+4.6 LED ............................................................................................................................................................. 9
+4.7 SMI(MDIO) INTERFACE ........................................................................................................................... 11
+4.8 MII,REMII,RMII INTERFACES ................................................................................................................ 11
+MIIandREMIImodes ............................................................................................................................................ 12
+RMII1andRMII2modes ........................................................................................................................................ 14
+4.8.2.1 RMII1/2(25MHzclock) .................................................................................................................................. 14
+4.8.2.2 RMII1/2(50MHzclock) .................................................................................................................................. 15
+4.9 AVOID ENTERINGSCAN MODE ................................................................................................................. 17
+4.10 MDI INTERFACE .........................................................................................................................................18
+4.11 DELAYEDMDIO OPERATION REQUIREMENTS AFTER HARD RESET ........................................................... 18
+4.12 JITTER REQUIREMENTS FOR EXTERNALREFERENCE CLOCK ...................................................................... 18
+4.13 OPERATIONALREQUIREMENTS FOREXTERNALREFERENCECLOCKSOURCESWITCHING ....................... 18
+4.14 DATATRANSMISSION PATH DELAY ..............................................................................................................19
+REGISTER ACCESS METHOD ............................................................................20
+5.1 TYPES OF REGISTERS ................................................................................................................................. 20
+5.2 ACCESS OTHER TYPES OF REGISTERS THROUGHMII REGISTERS ...............................................................22
+5.3 REPRESENTATION OF CERTAIN BITS OF THE READ-WRITE REGISTER .......................................................... 23
+5.4 INSTRUCTIONS FOR USING PHYADDR0 AND BDCST_ADDR ......................................................................... 24
+REGISTER FUNCTION CONFIGURATION ....................................................... 25
+6.1 INITIALIZATION CONFIGURATION AND UNSUPPORTED FUNCTIONS .............................................................25
+100Mhalf-duplexmodefailsinMIImode ............................................................................................................. 25
+Connectingto10BTbymistakewithoutplugginginthenetworkcable ................................................................ 25
+6.2 UTP(ELECTRICALPORT) CONFIGURATION .................................................................................................25
+10/100BTspeedandduplex .................................................................................................................................... 25
+powerdownsetting ................................................................................................................................................. 27
+Loopbackmode ....................................................................................................................................................... 27
+Smartdowngrade(auto-downgrade)configuration ................................................................................................ 29
+Sleep(auto-sleep)configuration ............................................................................................................................. 30
+Packetgeneratorandsending/receivingpacketstatistics ........................................................................................31
+SNRreading(currentconnectionqualityindication) ..............................................................................................32
+Template(electricalportindex)configuration ........................................................................................................ 32
+6.3 MII/RMIICONFIGURATION ....................................................................................................................... 33
+1
+1
+1
+1
+1
+=================== PAGE 6 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+5|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+Brief description
+YT8512 is a single-port, low-power 10M/100Mbps Ethernet PHY transceiver that supports both
+MII and RMII interfaces to connect to MAC. It mainly consists of power supply, reset, clock, data
+interface,LEDoutput,etc.,amongwhich,thedatainterfaceincludesxMII,SMIandMDImodules.
+This document mainly introduces some notes on hardware circuit and software-related
+configurations.
+Abbreviations
+YT:MotorcommElectronicTechnologyCo.,Ltd.,referstoourcompany.
+PHY: physical layer chip, used in this document refers to the Ethernet physical layer chip, i.e.,
+YT8512chip.
+MAC: Media Access Control, data link layer, used in this document refers to the upper layer
+interfacechipconnectedtoPHY,usuallyaswitchchiporCPUchipwithintegratedMACfunction.
+DUT:Deviceundertest,usedinthisdocumentgenerallyreferstoYT8512chip.
+LP: Link Partner, the pair-end connected chip, used in this document generally refers to the
+pair-endchipconnectedtotheDUTthroughthenetworkcable,fiberorSMAline.
+UTP: un-twisted pair, the interface used to connect to other PHY chips, used in this document
+referstotheEthernetelectricalinterface(orRJ45),including100/10Mbpsrates.
+MDIO/SMI: Management Data Input Output, an interface composed of MDC/MDIO, is used to
+readandwritetheinternalregistersofPHY.
+Mii: Media independent interface, the interface connecting the Ethernet PHY chip to MAC, only
+applies to 100/10Mbps rate. As the standard register of PHY specified in Section 802.3 is named
+MII register, the standard register is named Mii register in this document, which is recorded as
+mii_reg.
+Ext:ThenumberofMIIregistersislimited,whichis32only.Inordertomeetthedemandformore
+functions, the phy chip is configured with more registers, which is called extended register and
+recordedasext_reg.
+MMD: MDIO Manageable Device, refers to the register managed through the MDIO interface
+specified by IEEE802.3 standard Clause 45, which is called MMD register and recorded as
+mmd_reg.
+1
+1
+1
+1
+1
+=================== PAGE 9 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+8|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+XTAL_INconnectedto25Mclocksource XTAL_OUTconnectedto25Mclocksource
+Using25Mcrystaloscillator
+YT8512 can also be connected to a 50MHz clock signal (replace the clock source or crystal
+oscillator in the above figure with 50MHz clock signal). If a 50MHz clock is used, the following
+registersneedtobeinitializedafterthesystemispoweredon:
+Write_ext_reg0x50[6]: 1’b1 // Bit6 of extension register 0x50 is set to 1 to select the clock
+frequencydivisionfactor
+Write_mii_reg0x0[15]:1’b1//Bit15ofthebasicregister0x00issetto1toperformasoftreset
+operation
+For details about how to connect the 50MHz clock, please refer to the “RMII1/2(50MHz clock)”
+section.
+4.4 Rbias
+The Rbias pin (pin1) requires an external 2.49k (1% accuracy) resistor connected to ground, and
+someoftheinternalelectricalparametersoftheYT8512arerelatedtothisresistor.
+4.5 POS
+LED0,LED1,RX_DV,RXD1andRXD3are multiplexedpins.In additiontotheirfunctionsinthe
+normal state, at the initial power-on phase, theYT8512 detects the state of these 5 pins and makes
+some basic configuration of the chip according to the state. This process is called Power on
+strapping(POS).
+These 5 pinshave weak pull-downresistors insidethe IC. If noexternal configuration ismade, the
+default state is 0 in the POS phase. In practice, it is highly recommended to connect external
+pull-uporpull-down4.7kresistorsandnottorelyontheinternalweakpull-up/downresistors.
+LED0(pin24)\LED1(pin25)：
+ThestatesofLED0andLED1inthePOSphasedeterminethePHYaddressofYT8512.
+1
+1
+1
+1
+1
+=================== PAGE 10 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+9|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+Pinname_phyaddressbit
+phyaddress
+Led1_add1 Led0_add0
+00 0
+01 1
+10 2
+11 3
+It shouldbenotedthatwhenthesameMCUorMACmanagesmultiplephys,donotuse0address.
+Since address 0 is a broadcast address, all phys will respond when the phy with address 0 is
+operated.
+RXD1(pin10)：
+The state of RXD1 in the POS phase determines whether the LED0 pin is used as an LED or
+WOLoutput
+RXD1-0:LED0isusedasLEDoutputpin
+RXD1—1:LED0isusedasWOLinterruptoutput(onlysinkcurrentforopen-drainmode)
+RX_DV(pin8)：
+RX_DV-0:MIImode
+RX_DV—1:RMIImode
+RXD3(pin12)：
+RXD3-0:TXCistheoutput
+RXD3-1:TXCistheinput
+4.6 LED
+YT8512 has two LED pin outputs, that’s pin24-LED0 and pin25---LED1. Both pins have internal
+weakpull-downresistors.
+In addition to being used as LED output pins, they are also used as phy address configuration pins
+during the power on strapping phase, so sometimes these two pins have a strong pull-up or
+pull-down(4.7k)externally.
+1
+1
+1
+1
+1
+=================== PAGE 12 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+11|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+The internal registers are required for changing the behavior of the LED. See the LED
+configurationsectionfordetails.
+4.7 SMI (MDIO) interface
+The MDIO interface includes two signal lines: MDC (pin22) and MDIO (pin23). The MDC of
+YT8512 supports a data clock frequency up to 12.5MHz, and MDIO supports bi-directional data
+exchange.ItshouldbenotedthattheMDCclockisnotrelatedtotheTXCandRXCclocks.
+Although there is an internal pull-up, when MDIO is in use, the MDIO needs to be externally
+pulleduptoDVDD33usinga4.7kresistor.
+4.8 MII, REMII, RMII interfaces
+YT8512 supports MII/RMII interfaces to connect to MAC.YT8512 detects (Power Strapping) the
+RX_DVpin(pin8) duringtheinitial power-onperiod.If RX_DVislow,it isset toMII; otherwise,
+itissettoRMII.Inaddition,becausetheRX_DVpinisaweakpull-downinternally,iftheexternal
+circuitry is not set, the YT8512 is the MII interface by default. However, it is strongly
+recommendedforpracticalapplicationstoaddpull-up/pull-downresistorexternallyandnotrelyon
+theinternalweakpull-up/downresistors.
+YT8512 will also detect the pin RXD3/CLK_CTL (pin12, internal weak pull-down) during
+power-on, and determine the clock direction of TXC according to its level state. TXC is output at
+lowlevel;TXCisinputathighlevel.
+ThecombinationofthesetwoPOSproducesthefollowingpattern:
+RXDV RXD3 Mode Remark Applicationscenario
+0 0 MII
+mode
+TXC and RXCare output
+byPHY
+ConnectedtoMACMIIinterface
+0 1 REMI
+mode
+TXC and RXC are output
+to PHY by the opposite
+end
+GenerallynotconnectedtoMAC,butto
+anotherPHY
+1 0 RMII2 TXC is output from PHY
+toMAC
+Connected to MAC RMII (TXC input)
+interface
+1 1 RMII1 TXC is output by MAC to
+PHY
+Connected to MAC RMII (TXC output)
+interface
+LEDlight删除[hs-lll]:
+1
+1
+1
+1
+1
+=================== PAGE 13 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+12|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+MII and REMII modes
+Figure5a.YT8512workinginMIImode Figure5b.YT8512workinginREMIImode
+(Rx_DVandRXD3areexternally (Rx_DVisexternallyconnectedto4.7K
+connected to 4.7K resistor to ground) resistor to ground, and RXD3 isconnected
+to
+4.7Kresistorto3.3V)
+Figure 5a is a connection diagram of a typical Phy working in MII mode with MAC. Figure 5b is
+generallyusedinapplicationswheretwophysareconnectedback-to-back.
+RMII1 and RMII2 modes
+The RMII modes of the PHY are divided into two types, RMII1 and RMII2. The difference
+betweenthemisthedirectionoftheTXCclock.
+InRMII1mode,TXCistheinput.
+InRMII2mode,TXCistheoutput.
+The RMII mode on the MAC side should correspond to the PHY mode, that is, PHY RMII1 +
+MACRMII2,orPHYRMII2+MACRMII1.
+Generally,becausetheRMIImodeuses50MHzRMIITXC,thecustomermaydirectlyconnectthe
+RMII TXC sent by the MAC to the PHY as a reference clock to save the crystal of the PHY.
+Therefore, according to different clock sources, the circuit connection methods in RMII mode
+include:RMII1/2(25MHzclock)andRMII1(externallyinput50MHzclock)
+删除[hs-lll]:
+缩进: 首行缩进: 0 毫米设置格式[hs-lll]:
+1
+1
+1
+1
+1
+=================== PAGE 14 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+13|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+4.8.2.1 RMII1/2 (25MHz clock)
+When 25MHz is used as the reference clock, it only needs to set the POS to the correct mode, and
+nosoftwareconfigurationisrequired.
+The following figure shows the connection method between PHY and MAC by using a 25MHz
+crystalasareferenceclock(theexternal 25MHzclocksignal issimilar,pleaserefertotheprevious
+sectiononclocks):
+Note:
+1. TheCRS_DVofthePHYintheabovefigureisconnectedtotheMACinsteadofRXDV.
+4.8.2.2 RMII1/2 (50MHz clock)
+When50MHzisusedasthereferenceclock,inadditiontosettingthePOStothecorrect mode,the
+PHYneedstobeconfiguredwiththeappropriatesoftwareduringpower-oninitialization.
+Usually,when 50MHz isused asthe reference clock, itisthe 50MHzclock provided by theMAC:
+itcanbetheTXCoftheMAC,ortheMAChasaseparate50MHzclocksignaloutput.Atthistime,
+PHY is used in RMII1 mode. The following figures take these two cases as examples (Using a
+50MHzcrystal issimilar,please refer tothe clocksection above), showingtheconnectionbetween
+PHYandMAC:
+1
+1
+1
+1
+1
+=================== PAGE 15 ===================
+YT8512H YT8512C Application Notes For more information, please contact support@motor-comm.com
+14|Page SuzhouMotorcommElectronicTechnologyCo.,Ltd.
+Hardware POS Settings:
+RXDVandRXD3areexternallyconnectedtopull-up
+When the hardware 50MHz clock is divided into two:
+A Schottky diode and two resistors are required for isolation and current limiting. Most
+Schottkydiodesareavailable,suchasSD103AWS.
+Software register settings:
+Write_ext_reg0x50[6]:1’b1//Select50MHzreferenceclock
+Write_ext_reg0x4000[4]: 1’b1//In RMII mode, the default is CRS_DV, if it needs to be
+configuredasRX_DV,itneedstobesetto“1”
+Write_mii_reg0x0[15]:1’b1//softreset
+Notes:
+1. TheCRS_DVofthePHYintheabovefigureisconnectedtotheMACinsteadofRXDV.
+2. Theabove software register needstobeset aslongas itis50MHz,nomatter itisexternal
+input/crystal,ornomatterit’sRMII1/RMII2.
+3. Thevoltage,clock,andreset sequenceatpower-onmustmeettherequirementsmentioned
+in “4.2 Power-on Sequence”. Because the clock is provided by the CPU, the reset pin of
+PHY should also be controlled by the CPU to facilitate the adjustment to meet the
+power-onsequencerequirements.
+删除[hs-lll]:
+timing删除[hs-lll]:
+Timing删除[hs-lll]:
+timing删除[hs-lll]:
+1
+1
+1
+1
+1
