@@ -1,7 +1,7 @@
 #include "bsp_yt8512c.h"
 #include "systick.h"
 #include <stdio.h>
-
+#include "lwipopts.h"  /* 新增：为了获取 MAC_ADDRx 宏定义 */
 /**
  * @brief  配置 YT8512C 的 RMII 接口引脚
  */
@@ -29,7 +29,8 @@ static void rmii_gpio_config(void)
 
     /* 4. 配置 PG11(TX_EN), PG13(TXD0), PG14(TXD1) - 避开 PB11~PB13 */
     gpio_mode_set(GPIOG, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PIN_11 | GPIO_PIN_13 | GPIO_PIN_14);
-    gpio_output_options_set(GPIOG, GPIO_OTYPE_PP, GPIO_OSPEED_MAX, GPIO_PIN_11 | GPIO_PIN_13 | GPIO_PIN_14);
+    // gpio_output_options_set(GPIOG, GPIO_OTYPE_PP, GPIO_OSPEED_MAX, GPIO_PIN_11 | GPIO_PIN_13 | GPIO_PIN_14);
+    gpio_output_options_set(GPIOG, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_11 | GPIO_PIN_13 | GPIO_PIN_14);
     gpio_af_set(GPIOG, GPIO_AF_11, GPIO_PIN_11 | GPIO_PIN_13 | GPIO_PIN_14);
 }
 
@@ -60,6 +61,8 @@ static void yt8512c_hw_reset(void)
 void bsp_yt8512c_init(void)
 {
     ErrStatus enet_init_status;
+    /* 【修复项 1】：必须在函数最开头声明 mac_addr 数组 */
+    uint8_t mac_addr[6] = {MAC_ADDR0, MAC_ADDR1, MAC_ADDR2, MAC_ADDR3, MAC_ADDR4, MAC_ADDR5};
 
     /* 1. 复位硬件 PHY 芯片 */
     yt8512c_hw_reset();
@@ -86,12 +89,14 @@ void bsp_yt8512c_init(void)
         printf("[ETH] DMA Software Reset Success.\r\n");
     }
 
-    /* 6. 调用官方库初始化函数 */
-    /* 开启自协商，不开启硬件校验(由LwIP处理)，接收所有广播包 */
+    /* 6. 调用官方库初始化函数 (【修复项 2】：删除了你代码里重复的这一段) */
     enet_init_status = enet_init(ENET_AUTO_NEGOTIATION, ENET_NO_AUTOCHECKSUM, ENET_BROADCAST_FRAMES_PASS);
     
     if (SUCCESS == enet_init_status) {
         printf("YT8512C Ethernet PHY Init Success!\r\n");
+        /* 将 MAC 地址真正写入到 GD32 的底层硬件 MAC 寄存器中 */
+        enet_mac_address_set(ENET_MAC_ADDRESS0, mac_addr);
+        
     } else {
         printf("YT8512C Ethernet PHY Init Failed!\r\n");
     }

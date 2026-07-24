@@ -87,6 +87,70 @@
 #include "app_hlw8112.h"
 #include "bsp_yt8512c.h" 
 
+/* LwIP headers */
+#include "lwip/opt.h"
+#include "lwip/tcpip.h"
+#include "lwip/netif.h"
+#include "lwip/dhcp.h"
+#include "ethernetif.h"
+
+struct netif gnetif;
+
+/* Under Keil MicroLib, errno must be defined by the user */
+int errno;
+
+/* ENET interrupt counter */
+extern volatile uint32_t enet_rx_cnt;
+
+#define LwIP_INIT_TASK_STACK_SIZE          (512)
+#define LwIP_INIT_TASK_PRIO                (tskIDLE_PRIORITY + 3)
+
+static void lwip_init_completion_callback(void *arg)
+{
+    ip4_addr_t ipaddr;
+    ip4_addr_t netmask;
+    ip4_addr_t gw;
+
+    /* Initialize IP address, netmask, and gateway to 0.0.0.0 for DHCP */
+    IP4_ADDR(&ipaddr, 0, 0, 0, 0);
+    IP4_ADDR(&netmask, 0, 0, 0, 0);
+    IP4_ADDR(&gw, 0, 0, 0, 0);
+
+    /* Add netif interface */
+    netif_add(&gnetif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
+
+    /* Set as default interface and bring it up */
+    netif_set_default(&gnetif);
+    netif_set_up(&gnetif);
+
+    /* Print MAC address */
+    printf("[LwIP] MAC Address: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
+           gnetif.hwaddr[0], gnetif.hwaddr[1], gnetif.hwaddr[2],
+           gnetif.hwaddr[3], gnetif.hwaddr[4], gnetif.hwaddr[5]);
+
+    /* Start DHCP client */
+    printf("[LwIP] Starting DHCP client...\r\n");
+    dhcp_start(&gnetif);
+}
+void lwip_init_task(void *pvParameters)
+{
+    printf("[LwIP] Initializing TCPIP Stack...\r\n");
+    
+    /* Initialize LwIP TCP/IP stack thread with callback */
+    tcpip_init(lwip_init_completion_callback, NULL);
+
+    while (1) {
+        printf("[LwIP] Running... IP: %d.%d.%d.%d, ENET Rx IRQ Count: %d\r\n",
+               ((gnetif.ip_addr.addr) & 0xFF),
+               (((gnetif.ip_addr.addr) >> 8) & 0xFF),
+               (((gnetif.ip_addr.addr) >> 16) & 0xFF),
+               (((gnetif.ip_addr.addr) >> 24) & 0xFF),
+               (int)enet_rx_cnt);
+        
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
 /*!
     \brief    main function
     \param[in]  none
@@ -96,8 +160,13 @@
 int main(void)
 {
     /* 【修复项】：所有变量必须在函数最开头声明 (C89标准) */
+#if 0
     int addr;
     uint16_t phy_id = 0;
+#endif
+
+    /* Configure NVIC priority grouping to 4 bits for preempt priority, 0 bits for sub-priority */
+    nvic_priority_group_set(NVIC_PRIGROUP_PRE4_SUB0);
 
     systick_config();
     usart_debug_init(115200);
@@ -112,7 +181,7 @@ int main(void)
     printf("[ETH] YT8512C PHY Init...\r\n");
     bsp_yt8512c_init(); 
 
-#if 1
+#if 0
     printf("[ETH] Scanning PHY Addresses...\r\n");
     for (addr = 0; addr < 32; addr++) {
         ErrStatus status;
@@ -133,10 +202,13 @@ int main(void)
 #endif
     
     /* Create the CS1237 Task */
-    app_cs1237_task_create();
+    // app_cs1237_task_create();
 
     /* Create the HLW8112 Task */
-    app_hlw8112_task_create();
+    // app_hlw8112_task_create();
+
+    /* Create LwIP Initialization Task */
+    xTaskCreate(lwip_init_task, "LwIP_Init", LwIP_INIT_TASK_STACK_SIZE, NULL, LwIP_INIT_TASK_PRIO, NULL);
 
     /* Start FreeRTOS scheduler */
     printf("[System] Starting FreeRTOS Scheduler...\r\n");
@@ -146,6 +218,19 @@ int main(void)
         /* Should not be reached */
     }
 }
+
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
+{
+    printf("\r\n!!! [StackOverflow] Task: %s has overflowed its stack !!!\r\n", pcTaskName);
+    while(1);
+}
+
+void vApplicationMallocFailedHook(void)
+{
+    printf("\r\n!!! [MallocFailed] Out of FreeRTOS heap memory !!!\r\n");
+    while(1);
+}
+
 
 /* <-- 请确保你的光标能停在这单独的空行上 */
 

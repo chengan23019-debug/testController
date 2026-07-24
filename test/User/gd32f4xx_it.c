@@ -55,8 +55,10 @@ void NMI_Handler(void)
     \param[out] none
     \retval     none
 */
+#include <stdio.h>
 void HardFault_Handler(void)
 {
+    printf("\r\n!!! [HardFault_Handler] System Crashed !!!\r\n");
     /* if Hard Fault exception occurs, go to infinite loop */
     while(1) {
     }
@@ -154,3 +156,40 @@ void SysTick_Handler(void)
     delay_decrement();
 }
 */
+
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "gd32f4xx_enet.h"
+
+extern xSemaphoreHandle g_rx_semaphore;
+volatile uint32_t enet_rx_cnt = 0;
+
+/*!
+    \brief      this function handles ENET interrupt request
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void ENET_IRQHandler(void)
+{
+    portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
+
+    /* check whether the receive interrupt has occurred */
+    if(RESET != enet_interrupt_flag_get(ENET_DMA_INT_FLAG_RS)) {
+        enet_rx_cnt++;
+        /* clear the receive interrupt status flag */
+        enet_interrupt_flag_clear(ENET_DMA_INT_FLAG_RS_CLR);
+        
+        /* give the semaphore to wake up the ethernetif_input task */
+        if(g_rx_semaphore != NULL) {
+            xSemaphoreGiveFromISR(g_rx_semaphore, &xHigherPriorityTaskWoken);
+        }
+    }
+    
+    /* clear the normal interrupt summary flag */
+    enet_interrupt_flag_clear(ENET_DMA_INT_FLAG_NI_CLR);
+
+    /* yield from ISR if needed */
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
