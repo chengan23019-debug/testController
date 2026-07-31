@@ -40,6 +40,7 @@ OF SUCH DAMAGE.
 #include "bsp_dac.h"
 #include "bsp_lan8702.h"
 #include "bsp_cs1237.h"
+#include "bsp_hlw8112.h"
 #include "lwip_demo.h"
 
 #include "FreeRTOS.h"
@@ -115,7 +116,37 @@ static void app_task_cs1237(void *pvParameters)
             printf("[CS1237] ADC Read Timeout / DRDY Not Ready\r\n");
         }
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+static void app_task_hlw8112(void *pvParameters)
+{
+    hlw8112_data_t hlw_data;
+
+    (void)pvParameters;
+
+    printf("\r\n=== HLW8112 AC Energy Metering Task Started ===\r\n");
+
+    for (;;) {
+        hlw8112_read_data(&hlw_data);
+        if (hlw_data.calib_ok) {
+            printf("[HLW8112 Measure] Voltage: %6.2f V | Current: %7.3f A (%6.1f mA) | ActivePower: %7.2f W | PF: %5.3f | Freq: %5.2f Hz | Angle: %5.1f Deg | Energy: %.4f kWh\r\n",
+                   hlw_data.voltage,
+                   hlw_data.current_a,
+                   hlw_data.current_a_ma,
+                   hlw_data.active_power_a,
+                   hlw_data.power_factor,
+                   hlw_data.frequency,
+                   hlw_data.phase_angle,
+                   hlw_data.active_energy_a);
+        } else {
+            printf("[HLW8112 Status] Calibration Checksum Failed / Check SPI Wiring! (V: %6.2f V | I: %7.3f A)\r\n",
+                   hlw_data.voltage,
+                   hlw_data.current_a);
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
@@ -136,6 +167,10 @@ int main(void)
     cs1237_init();
     printf("CS1237 24-bit ADC Peripheral Initialized (CLK: PC3, DOUT: PC2)\r\n");
 
+    /* Initialize HLW8112 AC Metering Peripheral */
+    hlw8112_init();
+    printf("HLW8112 AC Metering Peripheral Initialized (CS: PB5, SCLK: PB6, SDI: PB7, SDO: PB8, EN: PB9)\r\n");
+
     /* Initialize LAN8702/LAN8720 Ethernet Driver */
     if (LAN8702_OK == bsp_lan8702_init()) {
         printf("LAN8702 Ethernet Module Driver Ready!\r\n");
@@ -154,8 +189,11 @@ int main(void)
     /* Create LED Toggle Task */
     xTaskCreate(app_task_led, "LEDTask", 256, NULL, 2, NULL);
 
-    /* Create CS1237 ADC Sampling Task (Priority 6) */
-    xTaskCreate(app_task_cs1237, "CS1237Task", 512, NULL, 6, NULL);
+    /* Create CS1237 ADC Sampling Task (Priority 5, Stack 1024) */
+    xTaskCreate(app_task_cs1237, "CS1237Task", 1024, NULL, 5, NULL);
+
+    /* Create HLW8112 Metering Task (Priority 5, Stack 1024) */
+    xTaskCreate(app_task_hlw8112, "HLW8112Task", 1024, NULL, 5, NULL);
 
     printf("Starting FreeRTOS Scheduler...\r\n");
 

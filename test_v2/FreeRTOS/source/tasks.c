@@ -245,6 +245,7 @@ void vTaskDelay( const TickType_t xTicksToDelay )
 			vListInsert( pxDelayedTaskList, &( pxTCB->xStateListItem ) );
 		}
 		( void ) xTaskResumeAll();
+		portYIELD_WITHIN_API();
 	}
 }
 

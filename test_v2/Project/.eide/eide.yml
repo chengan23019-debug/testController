@@ -15,6 +15,10 @@ virtualFolder:
         - path: ../User/systick.c
         - path: ../User/usart.c
         - path: ../User/bsp_dac.c
+        - path: ../User/bsp_lan8702.c
+        - path: ../User/bsp_lan8720.c
+        - path: ../User/bsp_cs1237.c
+        - path: ../User/bsp_hlw8112.c
       folders: []
     - name: Firmware
       files:

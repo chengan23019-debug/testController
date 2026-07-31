@@ -78,7 +78,7 @@ void cs1237_init(void)
 int32_t cs1237_read_adc_raw(uint8_t *success)
 {
     int32_t raw_data = 0;
-    uint32_t timeout = 20000000; /* Increased timeout to support slower output rates */
+    uint32_t timeout = 100000; /* Optimized timeout to prevent CPU starvation */
     int i;
 
     if (success) {
@@ -142,7 +142,7 @@ int32_t cs1237_read_adc_signed(uint8_t *success)
  */
 void cs1237_write_reg(uint8_t reg_val)
 {
-    uint32_t timeout = 20000000;
+    uint32_t timeout = 100000;
     int i;
     uint8_t cmd = CS1237_CMD_WRITE;
 
@@ -231,7 +231,7 @@ void cs1237_write_reg(uint8_t reg_val)
 uint8_t cs1237_read_reg(void)
 {
     uint8_t reg_val = 0;
-    uint32_t timeout = 20000000;
+    uint32_t timeout = 100000;
     int i;
     uint8_t cmd = CS1237_CMD_READ;
 

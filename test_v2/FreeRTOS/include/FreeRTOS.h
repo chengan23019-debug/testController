@@ -86,6 +86,10 @@
 	#define tracePOST_MOVED_TASK_TO_READY_STATE( pxTCB )
 #endif
 
+#ifndef portYIELD_WITHIN_API
+	#define portYIELD_WITHIN_API() portYIELD()
+#endif
+
 #define taskYIELD() portYIELD()
 
 #define taskENTER_CRITICAL()			portENTER_CRITICAL()

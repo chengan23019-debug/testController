@@ -7,6 +7,7 @@
 ".\objects\bsp_lan8720.o"
 ".\objects\bsp_lan8702.o"
 ".\objects\bsp_cs1237.o"
+".\objects\bsp_hlw8112.o"
 ".\objects\gd32f4xx_gpio.o"
 ".\objects\gd32f4xx_rcu.o"
 ".\objects\gd32f4xx_misc.o"
