@@ -43,6 +43,10 @@ OF SUCH DAMAGE.
 #include "bsp_cs1238.h"
 #include "bsp_hlw8112.h"
 #include "lwip_demo.h"
+#include "app_dyno_global.h"
+#include "app_dyno_control.h"
+#include "app_protocol_binary.h"
+#include "app_protocol_modbus.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -51,6 +55,7 @@ static void app_task_network(void *pvParameters)
 {
     extern struct netif g_netif;
     uint32_t last_link_ticks = 0;
+    uint32_t last_telemetry_ticks = 0;
     uint8_t link_status = 0;
 
     (void)pvParameters;
@@ -58,6 +63,12 @@ static void app_task_network(void *pvParameters)
     for (;;) {
         /* Non-blocking LwIP network packet & timer polling */
         lwip_demo_poll();
+
+        /* Push binary telemetry packet at 50Hz (every 20ms) to connected TCP Client */
+        if ((sys_now() - last_telemetry_ticks) >= 20U) {
+            last_telemetry_ticks = sys_now();
+            tcp_server_send_telemetry();
+        }
 
         /* Non-blocking Ethernet Link status check every 3000ms */
         if ((sys_now() - last_link_ticks) >= 3000U) {
@@ -217,7 +228,14 @@ int main(void)
     /* Initialize LwIP TCP Stack & TCP Server Demo */
     lwip_demo_init();
 
+    /* Initialize Dynamometer Global Data Center */
+    app_dyno_global_init();
+    printf("Dynamometer Global Data Center Initialized!\r\n");
+
     printf("Creating FreeRTOS Application Tasks...\r\n");
+
+    /* Create Dynamometer Load Control Task (Priority 7, Stack 1024) */
+    xTaskCreate(app_task_dyno_control, "DynoCtrlTask", 1024, NULL, 7, NULL);
 
     /* Create Network Task */
     xTaskCreate(app_task_network, "NetworkTask", 1024, NULL, 5, NULL);

@@ -433,6 +433,26 @@
               <FileType>1</FileType>
               <FilePath>..\User\bsp_cs1238.c</FilePath>
             </File>
+            <File>
+              <FileName>app_dyno_global.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\app_dyno_global.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_dyno_control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\app_dyno_control.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_protocol_binary.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\app_protocol_binary.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_protocol_modbus.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\app_protocol_modbus.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
