@@ -1,0 +1,14 @@
+# Keil / EIDE build outputs & temporary files
+test_v2/Project/Objects/
+test_v2/Project/objects/
+test_v2/Project/Listings/
+test_v2/Project/listings/
+test_v2/Project/*.uvguix.*
+test_v2/Project/*.uvgui.*
+test_v2/Project/*.bak
+test_v2/Project/*.dep
+test_v2/Project/log.txt
+
+# OS / Editor temporary files
+.DS_Store
+Thumbs.db

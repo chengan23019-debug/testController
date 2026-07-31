@@ -428,6 +428,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\bsp_hlw8112.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_cs1238.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp_cs1238.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -40,6 +40,7 @@ OF SUCH DAMAGE.
 #include "bsp_dac.h"
 #include "bsp_lan8702.h"
 #include "bsp_cs1237.h"
+#include "bsp_cs1238.h"
 #include "bsp_hlw8112.h"
 #include "lwip_demo.h"
 
@@ -150,6 +151,37 @@ static void app_task_hlw8112(void *pvParameters)
     }
 }
 
+static void app_task_cs1238(void *pvParameters)
+{
+    cs1238_data_t cs1238_data;
+    uint8_t reg_val = 0;
+
+    (void)pvParameters;
+
+    /* Print CS1238 configuration register status */
+    reg_val = cs1238_read_reg();
+    printf("CS1238 Register Read Code: 0x%02X\r\n", reg_val);
+
+    for (;;) {
+        /* Read CH1, CH2, and internal temperature using CS1238 driver */
+        cs1238_read_all_channels(&cs1238_data, 3.3f);
+        if (cs1238_data.success) {
+            printf("[CS1238 Smart Auto-Gain] CH1: %3dX Gain | %8d Raw (%8.4f mV) || CH2: %3dX Gain | %8d Raw (%8.4f mV) || Temp: %8d\r\n",
+                   cs1238_get_pga_multiplier(cs1238_data.pga_ch1),
+                   (int)cs1238_data.raw_ch1,
+                   cs1238_data.volt_ch1_mv,
+                   cs1238_get_pga_multiplier(cs1238_data.pga_ch2),
+                   (int)cs1238_data.raw_ch2,
+                   cs1238_data.volt_ch2_mv,
+                   (int)cs1238_data.raw_temp);
+        } else {
+            printf("[CS1238] Multi-Channel Read Timeout / DRDY Not Ready\r\n");
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
 /*!
     \brief    main function
     \param[in]  none
@@ -166,6 +198,10 @@ int main(void)
     /* Initialize CS1237 24-bit ADC Peripheral */
     cs1237_init();
     printf("CS1237 24-bit ADC Peripheral Initialized (CLK: PC3, DOUT: PC2)\r\n");
+
+    /* Initialize CS1238 Dual-Channel 24-bit ADC Peripheral */
+    cs1238_init();
+    printf("CS1238 Dual-CH 24-bit ADC Peripheral Initialized (CLK: PD0, DOUT: PD1)\r\n");
 
     /* Initialize HLW8112 AC Metering Peripheral */
     hlw8112_init();
@@ -191,6 +227,9 @@ int main(void)
 
     /* Create CS1237 ADC Sampling Task (Priority 5, Stack 1024) */
     xTaskCreate(app_task_cs1237, "CS1237Task", 1024, NULL, 5, NULL);
+
+    /* Create CS1238 Dual-Channel ADC Task (Priority 5, Stack 1024) */
+    xTaskCreate(app_task_cs1238, "CS1238Task", 1024, NULL, 5, NULL);
 
     /* Create HLW8112 Metering Task (Priority 5, Stack 1024) */
     xTaskCreate(app_task_hlw8112, "HLW8112Task", 1024, NULL, 5, NULL);
