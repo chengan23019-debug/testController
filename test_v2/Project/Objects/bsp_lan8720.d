@@ -42,9 +42,9 @@
 .\objects\bsp_lan8720.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 .\objects\bsp_lan8720.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 .\objects\bsp_lan8720.o: ..\User\systick.h
-.\objects\bsp_lan8720.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\src\include\lwip/opt.h
+.\objects\bsp_lan8720.o: ..\LwIP\src\include\lwip/opt.h
 .\objects\bsp_lan8720.o: ..\User\lwip_port\lwipopts.h
-.\objects\bsp_lan8720.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\src\include\lwip/debug.h
-.\objects\bsp_lan8720.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\src\include\lwip/arch.h
-.\objects\bsp_lan8720.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\port\arch/cc.h
-.\objects\bsp_lan8720.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\port\arch/cpu.h
+.\objects\bsp_lan8720.o: ..\LwIP\src\include\lwip/debug.h
+.\objects\bsp_lan8720.o: ..\LwIP\src\include\lwip/arch.h
+.\objects\bsp_lan8720.o: ..\LwIP\port\arch/cc.h
+.\objects\bsp_lan8720.o: ..\LwIP\port\arch/cpu.h

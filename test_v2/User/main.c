@@ -41,47 +41,20 @@ OF SUCH DAMAGE.
 #include "bsp_lan8702.h"
 #include "lwip_demo.h"
 
-/*!
-    \brief    main function
-    \param[in]  none
-    \param[out] none
-    \retval     none
-*/
-int main(void)
+#include "FreeRTOS.h"
+#include "task.h"
+
+static void app_task_network(void *pvParameters)
 {
     extern struct netif g_netif;
-    uint32_t last_led_ticks = 0;
     uint32_t last_link_ticks = 0;
     uint8_t link_status = 0;
 
-    systick_config();
-    usart_debug_init(115200);
+    (void)pvParameters;
 
-    printf("\r\n=== GD32F470 System Initialization ===\r\n");
-
-    /* Initialize LAN8702/LAN8720 Ethernet Driver */
-    if (LAN8702_OK == bsp_lan8702_init()) {
-        printf("LAN8702 Ethernet Module Driver Ready!\r\n");
-    } else {
-        printf("LAN8702 Ethernet Module Driver Initialization Failed!\r\n");
-    }
-
-    /* Initialize LwIP TCP Stack & TCP Server Demo */
-    lwip_demo_init();
-
-    rcu_periph_clock_enable(RCU_GPIOD);
-    gpio_mode_set(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_7); // PD7-LED2
-    gpio_output_options_set(GPIOD, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_7);
-
-    while(1) {
+    for (;;) {
         /* Non-blocking LwIP network packet & timer polling */
         lwip_demo_poll();
-
-        /* Non-blocking LED toggle every 500ms */
-        if ((sys_now() - last_led_ticks) >= 500U) {
-            last_led_ticks = sys_now();
-            gpio_bit_toggle(GPIOD, GPIO_PIN_7);
-        }
 
         /* Non-blocking Ethernet Link status check every 3000ms */
         if ((sys_now() - last_link_ticks) >= 3000U) {
@@ -94,6 +67,64 @@ int main(void)
                    (uint8_t)(g_netif.ip_addr.addr >> 16),
                    (uint8_t)(g_netif.ip_addr.addr >> 24));
         }
+
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
+
+static void app_task_led(void *pvParameters)
+{
+    (void)pvParameters;
+
+    rcu_periph_clock_enable(RCU_GPIOD);
+    gpio_mode_set(GPIOD, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_PIN_7); // PD7-LED2
+    gpio_output_options_set(GPIOD, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_7);
+
+    for (;;) {
+        gpio_bit_toggle(GPIOD, GPIO_PIN_7);
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+}
+
+/*!
+    \brief    main function
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+int main(void)
+{
+    systick_config();
+    usart_debug_init(115200);
+
+    printf("\r\n=== GD32F470 System Initialization (FreeRTOS Architecture) ===\r\n");
+
+    /* Initialize LAN8702/LAN8720 Ethernet Driver */
+    if (LAN8702_OK == bsp_lan8702_init()) {
+        printf("LAN8702 Ethernet Module Driver Ready!\r\n");
+    } else {
+        printf("LAN8702 Ethernet Module Driver Initialization Failed!\r\n");
+    }
+
+    /* Initialize LwIP TCP Stack & TCP Server Demo */
+    lwip_demo_init();
+
+    printf("Creating FreeRTOS Application Tasks...\r\n");
+
+    /* Create Network Task */
+    xTaskCreate(app_task_network, "NetworkTask", 1024, NULL, 5, NULL);
+
+    /* Create LED Toggle Task */
+    xTaskCreate(app_task_led, "LEDTask", 256, NULL, 2, NULL);
+
+    printf("Starting FreeRTOS Scheduler...\r\n");
+
+    /* Start Scheduler */
+    vTaskStartScheduler();
+
+    /* Infinite loop fallback if scheduler fails */
+    while(1) {
+    }
+}
+
 

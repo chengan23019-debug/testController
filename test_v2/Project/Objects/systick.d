@@ -39,9 +39,9 @@
 .\objects\systick.o: ..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_ipa.h
 .\objects\systick.o: ..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_tli.h
 .\objects\systick.o: ..\User\systick.h
-.\objects\systick.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\src\include\lwip/opt.h
+.\objects\systick.o: ..\LwIP\src\include\lwip/opt.h
 .\objects\systick.o: ..\User\lwip_port\lwipopts.h
-.\objects\systick.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\src\include\lwip/debug.h
-.\objects\systick.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\src\include\lwip/arch.h
-.\objects\systick.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\port\arch/cc.h
-.\objects\systick.o: ..\Project\LAN8720-ETH-Board-Code\STM32\ETH_LwIP\Utilities\lwip-1.3.1\port\arch/cpu.h
+.\objects\systick.o: ..\LwIP\src\include\lwip/debug.h
+.\objects\systick.o: ..\LwIP\src\include\lwip/arch.h
+.\objects\systick.o: ..\LwIP\port\arch/cc.h
+.\objects\systick.o: ..\LwIP\port\arch/cpu.h
