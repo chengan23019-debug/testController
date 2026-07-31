@@ -52,6 +52,7 @@
 .\objects\main.o: ..\User\bsp_lan8702.h
 .\objects\main.o: ..\User\bsp_lan8720.h
 .\objects\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+.\objects\main.o: ..\User\bsp_cs1237.h
 .\objects\main.o: ..\User\lwip_app\lwip_demo.h
 .\objects\main.o: ..\LwIP\src\include\lwip/init.h
 .\objects\main.o: ..\LwIP\src\include\lwip/netif.h

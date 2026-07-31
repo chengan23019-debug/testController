@@ -39,6 +39,7 @@ OF SUCH DAMAGE.
 #include "usart.h"
 #include "bsp_dac.h"
 #include "bsp_lan8702.h"
+#include "bsp_cs1237.h"
 #include "lwip_demo.h"
 
 #include "FreeRTOS.h"
@@ -86,6 +87,38 @@ static void app_task_led(void *pvParameters)
     }
 }
 
+static void app_task_cs1237(void *pvParameters)
+{
+    uint8_t success = 0;
+    int32_t adc_val = 0;
+    uint8_t reg_val = 0;
+    cs1237_pga_t active_pga = CS1237_PGA_128X;
+    float voltage_mv = 0.0f;
+
+    (void)pvParameters;
+
+    /* Print CS1237 configuration register status */
+    reg_val = cs1237_read_reg();
+    printf("CS1237 Register Read Code: 0x%02X\r\n", reg_val);
+
+    for (;;) {
+        /* Sample ADC with Auto-Range gain switching */
+        adc_val = cs1237_read_adc_auto_range(&success, &active_pga);
+        if (success) {
+            voltage_mv = cs1237_raw_to_voltage_mv(adc_val, active_pga, 3.3f);
+            printf("[CS1237 Auto-Range] Gain: %3dX | ADC Raw: %8d | Voltage: %9.4f mV (%7.2f uV)\r\n",
+                   cs1237_get_pga_multiplier(active_pga),
+                   (int)adc_val,
+                   voltage_mv,
+                   voltage_mv * 1000.0f);
+        } else {
+            printf("[CS1237] ADC Read Timeout / DRDY Not Ready\r\n");
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
 /*!
     \brief    main function
     \param[in]  none
@@ -98,6 +131,10 @@ int main(void)
     usart_debug_init(115200);
 
     printf("\r\n=== GD32F470 System Initialization (FreeRTOS Architecture) ===\r\n");
+
+    /* Initialize CS1237 24-bit ADC Peripheral */
+    cs1237_init();
+    printf("CS1237 24-bit ADC Peripheral Initialized (CLK: PC3, DOUT: PC2)\r\n");
 
     /* Initialize LAN8702/LAN8720 Ethernet Driver */
     if (LAN8702_OK == bsp_lan8702_init()) {
@@ -116,6 +153,9 @@ int main(void)
 
     /* Create LED Toggle Task */
     xTaskCreate(app_task_led, "LEDTask", 256, NULL, 2, NULL);
+
+    /* Create CS1237 ADC Sampling Task (Priority 6) */
+    xTaskCreate(app_task_cs1237, "CS1237Task", 512, NULL, 6, NULL);
 
     printf("Starting FreeRTOS Scheduler...\r\n");
 

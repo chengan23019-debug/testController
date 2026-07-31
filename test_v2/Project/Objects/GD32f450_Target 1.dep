@@ -58,7 +58,7 @@ I (..\FreeRTOS\include\mpu_wrappers.h)(0x6A6C4530)
 I (..\FreeRTOS\portable\RVDS\ARM_CM4F\portmacro.h)(0x6A6C453A)
 I (..\FreeRTOS\include\list.h)(0x6A6C4470)
 I (..\FreeRTOS\include\task.h)(0x6A6C448E)
-F (..\User\main.c)(0x6A6C44E6)(-c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\User -I ..\User\lwip_port -I ..\User\lwip_app -I ..\Firmware\CMSIS -I ..\Firmware\CMSIS\GD\GD32F4xx\Include -I ..\Firmware\GD32F4xx_standard_peripheral\Include -I ..\LwIP\src\include -I ..\LwIP\src\include\ipv4 -I ..\LwIP\port -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM4F-IC:\Users\PC006\AppData\Local\Arm\Packs\GigaDevice\GD32F4xx_DFP\3.0.5\Device\F4XX\Include-D__UVISION_VERSION="536" -DGD32F470 -DUSE_STDPERIPH_DRIVER -DGD32F450-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
+F (..\User\main.c)(0x6A6C4860)(-c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\User -I ..\User\lwip_port -I ..\User\lwip_app -I ..\Firmware\CMSIS -I ..\Firmware\CMSIS\GD\GD32F4xx\Include -I ..\Firmware\GD32F4xx_standard_peripheral\Include -I ..\LwIP\src\include -I ..\LwIP\src\include\ipv4 -I ..\LwIP\port -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM4F-IC:\Users\PC006\AppData\Local\Arm\Packs\GigaDevice\GD32F4xx_DFP\3.0.5\Device\F4XX\Include-D__UVISION_VERSION="536" -DGD32F470 -DUSE_STDPERIPH_DRIVER -DGD32F450-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
 I (..\Firmware\CMSIS\GD\GD32F4xx\Include\gd32f4xx.h)(0x6A57108C)
 I (..\Firmware\CMSIS\core_cm4.h)(0x6A57108C)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x6025237E)
@@ -111,6 +111,7 @@ I (..\User\bsp_dac.h)(0x6A57108C)
 I (..\User\bsp_lan8702.h)(0x6A632A6E)
 I (..\User\bsp_lan8720.h)(0x6A632A69)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6025237E)
+I (..\User\bsp_cs1237.h)(0x6A6C484F)
 I (..\User\lwip_app\lwip_demo.h)(0x6A6330AF)
 I (..\LwIP\src\include\lwip/init.h)(0x63B69B43)
 I (..\LwIP\src\include\lwip/netif.h)(0x63B69B43)
@@ -359,6 +360,46 @@ I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_ipa.h)(0x6A57108C)
 I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_tli.h)(0x6A57108C)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x60252374)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6025237E)
+F (..\User\bsp_cs1237.c)(0x6A6C4859)(-c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\User -I ..\User\lwip_port -I ..\User\lwip_app -I ..\Firmware\CMSIS -I ..\Firmware\CMSIS\GD\GD32F4xx\Include -I ..\Firmware\GD32F4xx_standard_peripheral\Include -I ..\LwIP\src\include -I ..\LwIP\src\include\ipv4 -I ..\LwIP\port -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM4F-IC:\Users\PC006\AppData\Local\Arm\Packs\GigaDevice\GD32F4xx_DFP\3.0.5\Device\F4XX\Include-D__UVISION_VERSION="536" -DGD32F470 -DUSE_STDPERIPH_DRIVER -DGD32F450-o .\objects\bsp_cs1237.o --omf_browse .\objects\bsp_cs1237.crf --depend .\objects\bsp_cs1237.d)
+I (..\User\bsp_cs1237.h)(0x6A6C484F)
+I (..\Firmware\CMSIS\GD\GD32F4xx\Include\gd32f4xx.h)(0x6A57108C)
+I (..\Firmware\CMSIS\core_cm4.h)(0x6A57108C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x6025237E)
+I (..\Firmware\CMSIS\core_cmInstr.h)(0x6A57108C)
+I (..\Firmware\CMSIS\core_cmFunc.h)(0x6A57108C)
+I (..\Firmware\CMSIS\core_cm4_simd.h)(0x6A57108C)
+I (..\Firmware\CMSIS\GD\GD32F4xx\Include\system_gd32f4xx.h)(0x6A57108C)
+I (..\User\gd32f4xx_libopt.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_rcu.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_adc.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_can.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_crc.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_ctc.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_dac.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_dbg.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_dci.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_dma.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_exti.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_fmc.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_fwdgt.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_gpio.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_syscfg.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_i2c.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_iref.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_pmu.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_rtc.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_sdio.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_spi.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_timer.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_trng.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_usart.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_wwdgt.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_misc.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_enet.h)(0x6A57108C)
+I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x60252374)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_exmc.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_ipa.h)(0x6A57108C)
+I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_tli.h)(0x6A57108C)
 F (..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_gpio.c)(0x6A57108C)(-c --cpu Cortex-M4.fp.sp -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\User -I ..\User\lwip_port -I ..\User\lwip_app -I ..\Firmware\CMSIS -I ..\Firmware\CMSIS\GD\GD32F4xx\Include -I ..\Firmware\GD32F4xx_standard_peripheral\Include -I ..\LwIP\src\include -I ..\LwIP\src\include\ipv4 -I ..\LwIP\port -I ..\FreeRTOS\include -I ..\FreeRTOS\portable\RVDS\ARM_CM4F-IC:\Users\PC006\AppData\Local\Arm\Packs\GigaDevice\GD32F4xx_DFP\3.0.5\Device\F4XX\Include-D__UVISION_VERSION="536" -DGD32F470 -DUSE_STDPERIPH_DRIVER -DGD32F450-o .\objects\gd32f4xx_gpio.o --omf_browse .\objects\gd32f4xx_gpio.crf --depend .\objects\gd32f4xx_gpio.d)
 I (..\Firmware\GD32F4xx_standard_peripheral\Include\gd32f4xx_gpio.h)(0x6A57108C)
 I (..\Firmware\CMSIS\GD\GD32F4xx\Include\gd32f4xx.h)(0x6A57108C)
