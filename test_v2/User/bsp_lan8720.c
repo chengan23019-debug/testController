@@ -226,8 +226,8 @@ int bsp_lan8720_init(void)
             break;
     }
 
-    /* Initialize ENET MAC & DMA hardware with Auto-Negotiation enabled */
-    if (ERROR == enet_init(ENET_AUTO_NEGOTIATION, ENET_NO_AUTOCHECKSUM, ENET_BROADCAST_FRAMES_PASS)) {
+    /* Initialize ENET MAC & DMA hardware with negotiated media mode */
+    if (ERROR == enet_init(media_mode, ENET_NO_AUTOCHECKSUM, ENET_BROADCAST_FRAMES_PASS)) {
         printf("[LAN8720 Driver] Error: enet_init failed!\r\n");
         return LAN8720_ERROR;
     }

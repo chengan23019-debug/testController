@@ -42,6 +42,7 @@ OF SUCH DAMAGE.
 #include "bsp_cs1237.h"
 #include "bsp_cs1238.h"
 #include "bsp_hlw8112.h"
+#include "bsp_sdram.h"
 #include "lwip_demo.h"
 #include "app_dyno_global.h"
 #include "app_dyno_control.h"
@@ -206,13 +207,17 @@ int main(void)
 
     printf("\r\n=== GD32F470 System Initialization (FreeRTOS Architecture) ===\r\n");
 
+    /* Initialize On-Board W9825G6KH-6I SDRAM (32MB) via EXMC */
+    bsp_sdram_init();
+    bsp_sdram_test();
+
     /* Initialize CS1237 24-bit ADC Peripheral */
     cs1237_init();
-    printf("CS1237 24-bit ADC Peripheral Initialized (CLK: PC3, DOUT: PC2)\r\n");
+    printf("CS1237 24-bit ADC Peripheral Initialized (CLK: PF6, DOUT: PF7)\r\n");
 
     /* Initialize CS1238 Dual-Channel 24-bit ADC Peripheral */
     cs1238_init();
-    printf("CS1238 Dual-CH 24-bit ADC Peripheral Initialized (CLK: PD0, DOUT: PD1)\r\n");
+    printf("CS1238 Dual-CH 24-bit ADC Peripheral Initialized (CLK: PF6, DOUT: PF9)\r\n");
 
     /* Initialize HLW8112 AC Metering Peripheral */
     hlw8112_init();

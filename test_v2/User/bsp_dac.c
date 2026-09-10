@@ -58,7 +58,7 @@ void bsp_dac_set_voltage(uint8_t channel, float voltage)
     dac_value = (uint16_t)((voltage / vref) * 4095.0f);
     
     /* Print debug information to USART */
-    printf("DAC Channel %d: Set to %d mV, Register Value = %d\r\n", channel, (int)(voltage * 1000.0f), dac_value);
+    // printf("DAC Channel %d: Set to %d mV, Register Value = %d\r\n", channel, (int)(voltage * 1000.0f), dac_value);
     
     if(channel == 0) {
         dac_data_set(DAC0, DAC_OUT0, DAC_ALIGN_12B_R, dac_value);

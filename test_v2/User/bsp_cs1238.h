@@ -4,13 +4,13 @@
 #include "gd32f4xx.h"
 
 /* GPIO Pin Configuration for CS1238 (Software 2-Wire Interface) */
-#define CS1238_CLK_RCU       RCU_GPIOD
-#define CS1238_CLK_PORT      GPIOD
-#define CS1238_CLK_PIN       GPIO_PIN_0
+#define CS1238_CLK_RCU       RCU_GPIOF
+#define CS1238_CLK_PORT      GPIOF
+#define CS1238_CLK_PIN       GPIO_PIN_6
 
-#define CS1238_DOUT_RCU      RCU_GPIOD
-#define CS1238_DOUT_PORT     GPIOD
-#define CS1238_DOUT_PIN      GPIO_PIN_1
+#define CS1238_DOUT_RCU      RCU_GPIOF
+#define CS1238_DOUT_PORT     GPIOF
+#define CS1238_DOUT_PIN      GPIO_PIN_9
 
 /* CS1238 SPI commands (7-bit commands shifted during pulses 30-36) */
 #define CS1238_CMD_READ      0x56  /* Read Configuration Register */

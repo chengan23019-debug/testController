@@ -13,8 +13,8 @@ CS1238 是由芯海科技（CHIPSEA）推出的一款高精度、低功耗 24 �
 
 | CS1238 引脚名称 | 信号功能 | GD32F470 GPIO 引脚 | 模式配置 | 备注 |
 | :--- | :--- | :--- | :--- | :--- |
-| **SCLK** | 串行时钟输入 | `PD0` | 推挽输出 (`GPIO_MODE_OUTPUT`) | 默认初始低电平 |
-| **DOUT / DRDY** | 数据输出 / 准备就绪 | `PD1` | 浮空/上拉输入与推挽输出动态切换 | 数据准备好时降为低电平 |
+| **SCLK** | 串行时钟输入 | `PD8` | 推挽输出 (`GPIO_MODE_OUTPUT`) | 默认初始低电平 |
+| **DOUT / DRDY** | 数据输出 / 准备就绪 | `PD9` | 浮空/上拉输入与推挽输出动态切换 | 数据准备好时降为低电平 |
 | **VCC / GND** | 供电与地 | `3.3V` / `GND` | - | 支持 2.7V - 5.5V 供电 |
 
 > **提示**：引脚定义位于 [bsp_cs1238.h](file:///d:/code/testController/testController/test_v2/User/bsp_cs1238.h) 中，可通过修改 `CS1238_CLK_PORT/PIN` 和 `CS1238_DOUT_PORT/PIN` 轻松重映射至任意 GPIO 引脚。

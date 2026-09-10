@@ -53,12 +53,43 @@ graph TD
 
 ---
 
-## 2. 方案 A：以太网自定义高频二进制协议规范
+## 2. 硬件外设与 MCU 引脚连接映射表
+
+系统基于 **GD32F470ZGT6** 主控（立创·梁山派开发板），各外设芯片与片上功能引脚连接分配如下：
+
+| 外设芯片 / 模块 | 信号引脚 | GD32F470 引脚 | 模式 / 复用功能 | 功能说明 |
+| :--- | :--- | :--- | :--- | :--- |
+| **LAN8720A / LAN8702**<br>(10/100M 以太网 PHY) | REFCLK | **PA1** | AF11 (`ETH_RMII_REF_CLK`) | 50MHz 参考时钟输入 (板载晶振) |
+| | MDIO | **PA2** | AF11 (`ETH_MDIO`) | SMI 串行管理数据总线 |
+| | CRS_DV | **PA7** | AF11 (`ETH_RMII_CRS_DV`) | 载波监听 / 接收数据有效 |
+| | MDC | **PC1** | AF11 (`ETH_MDC`) | SMI 串行管理时钟总线 |
+| | RXD0 | **PC4** | AF11 (`ETH_RMII_RXD0`) | RMII 接收数据线 0 |
+| | RXD1 | **PC5** | AF11 (`ETH_RMII_RXD1`) | RMII 接收数据线 1 |
+| | TX_EN | **PB11** | AF11 (`ETH_RMII_TX_EN`) | RMII 发送使能 |
+| | TXD0 | **PB12** | AF11 (`ETH_RMII_TXD0`) | RMII 发送数据线 0 |
+| | TXD1 | **PB13** | AF11 (`ETH_RMII_TXD1`) | RMII 发送数据线 1 |
+| **CS1238**<br>(24位双通道 ADC) | SCLK | **PD8** | 输出 (`GPIO_MODE_OUTPUT`) | 2-Wire 串行时钟线 |
+| | DOUT / DRDY | **PD9** | 双向 (`GPIO_MODE_INPUT` / `OUTPUT`) | 数据输出 / 准备就绪指示 |
+| **CS1237**<br>(24位单通道 ADC) | SCLK | **PC6** | 输出 (`GPIO_MODE_OUTPUT`) | 2-Wire 串行时钟线 |
+| | DOUT / DRDY | **PC7** | 双向 (`GPIO_MODE_INPUT` / `OUTPUT`) | 数据输出 / 准备就绪指示 |
+| **HLW8112**<br>(单相交流电计量芯片) | CS | **PB5** | 输出 (`GPIO_MODE_OUTPUT`) | 软件 SPI 片选 (低电平有效) |
+| | SCLK | **PB6** | 输出 (`GPIO_MODE_OUTPUT`) | 软件 SPI 时钟信号 |
+| | SDI (MOSI) | **PB7** | 输出 (`GPIO_MODE_OUTPUT`) | 主机发送数据输入 |
+| | SDO (MISO) | **PB8** | 输入 (`GPIO_MODE_INPUT`, 上拉) | 计量数据输出回读 |
+| | EN / SEL | **PB9** | 输出 (`GPIO_MODE_OUTPUT`) | 芯片使能与 SPI 模式选择 |
+| **DAC 模拟量加载控制** | DAC0_OUT0 | **PA4** | 模拟输出 (`GPIO_MODE_ANALOG`) | 测功机加载输出控制电压 (0~3.3V) |
+| | DAC0_OUT1 | **PA5** | 模拟输出 (`GPIO_MODE_ANALOG`) | 备用 DAC 模拟量输出通道 |
+| **调试串口 USART0** | TX / RX | **PA9 / PA10** | AF7 (`USART0_TX` / `RX`) | 调试日志打印 (115200 8-N-1) |
+| **系统运行指示灯** | LED2 | **PD7** | 输出 (`GPIO_MODE_OUTPUT`) | FreeRTOS 心跳指示灯 (500ms 翻转) |
+
+---
+
+## 3. 方案 A：以太网自定义高频二进制协议规范
 
 * **字节序说明**：帧头及 Payload 中的 16/32 位整数与单精度浮点数遵循 Intel 小端模式 (Little Endian)，`Len` 字段为大端模式 (Big Endian)。
 * **校验算法**：采用标准 **CRC16-Modbus** 算法（多项式 `0xA001`，初始值 `0xFFFF`）。
 
-### 2.1 数据帧格式
+### 3.1 数据帧格式
 
 | 偏移 (Bytes) | 字段名 | 类型 | 说明 |
 | :---: | :--- | :---: | :--- |
@@ -71,7 +102,7 @@ graph TD
 
 ---
 
-### 2.2 功能码定义列表
+### 3.2 功能码定义列表
 
 #### ① `0x01` - 实时测试数据主动上报帧（MCU $\rightarrow$ PC，50Hz）
 Payload 尺寸：40 字节
@@ -129,13 +160,13 @@ typedef struct __attribute__((packed)) {
 
 ---
 
-## 3. 方案 B：RS485 Modbus RTU 从机协议规范
+## 4. 方案 B：RS485 Modbus RTU 从机协议规范
 
 * **波特率**：默认 `115200 8-N-1`
 * **从机地址**：默认 `0x01`
 * **浮点数表示**：每个单精度 `Float` (32-bit) 占用 2 个连续的 16 位寄存器（高字在低地址，即 Big-Endian Words）。
 
-### 3.1 只读输入寄存器映射表 (Input Registers - 功能码 `0x04`)
+### 4.1 只读输入寄存器映射表 (Input Registers - 功能码 `0x04`)
 
 | 寄存器地址 | 变量名称 | 类型 | 单位 | 描述 |
 | :---: | :--- | :---: | :---: | :--- |
@@ -150,7 +181,7 @@ typedef struct __attribute__((packed)) {
 
 ---
 
-### 3.2 可读写保持寄存器映射表 (Holding Registers - 功能码 `0x03` / `0x06` / `0x10`)
+### 4.2 可读写保持寄存器映射表 (Holding Registers - 功能码 `0x03` / `0x06` / `0x10`)
 
 | 寄存器地址 | 变量名称 | 类型 | 可选值/单位 | 描述 |
 | :---: | :--- | :---: | :---: | :--- |
@@ -163,9 +194,9 @@ typedef struct __attribute__((packed)) {
 
 ---
 
-## 4. 测功机控制任务与 PID 算法预留
+## 5. 测功机控制任务与 PID 算法预留
 
-### 4.1 控制状态机工作流程 (`app_dyno_control.c`)
+### 5.1 控制状态机工作流程 (`app_dyno_control.c`)
 
 控制任务运行于 **FreeRTOS 100Hz (10ms 周期)**，严格按如下逻辑控制物理 DAC (PA4) 输出：
 
@@ -183,7 +214,7 @@ typedef struct __attribute__((packed)) {
 
 ---
 
-## 5. 测试与对接方法
+## 6. 测试与对接方法
 
 1. **使用 Modbus Poll 调试工具**：
    - 连接 RS485 转换器，选择 `Modbus RTU`，Slave ID 设置为 `1`。

@@ -4,13 +4,13 @@
 #include "gd32f4xx.h"
 
 /* GPIO Pin Configuration for CS1237 */
-#define CS1237_CLK_RCU       RCU_GPIOC
-#define CS1237_CLK_PORT      GPIOC
-#define CS1237_CLK_PIN       GPIO_PIN_3
+#define CS1237_CLK_RCU       RCU_GPIOF
+#define CS1237_CLK_PORT      GPIOF
+#define CS1237_CLK_PIN       GPIO_PIN_6
 
-#define CS1237_DOUT_RCU      RCU_GPIOC
-#define CS1237_DOUT_PORT     GPIOC
-#define CS1237_DOUT_PIN      GPIO_PIN_2
+#define CS1237_DOUT_RCU      RCU_GPIOF
+#define CS1237_DOUT_PORT     GPIOF
+#define CS1237_DOUT_PIN      GPIO_PIN_7
 
 /* CS1237 SPI commands (7-bit commands) */
 #define CS1237_CMD_READ      0x56  /* Read Configuration Register */

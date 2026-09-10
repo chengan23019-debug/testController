@@ -42,6 +42,24 @@ static void cs1237_dout_as_output(void)
 #define CS1237_DOUT_R()   gpio_input_bit_get(CS1237_DOUT_PORT, CS1237_DOUT_PIN)
 
 /**
+ * @brief Wait for DOUT/DRDY pin to fall LOW (Data Ready) with configurable millisecond timeout
+ * @param timeout_ms Maximum time to wait in milliseconds (e.g. 150ms for 10Hz data rate)
+ * @return 1 if DRDY went LOW, 0 if timed out
+ */
+static uint8_t cs1237_wait_drdy_low(uint32_t timeout_ms)
+{
+    uint32_t max_us = timeout_ms * 1000U;
+    while (CS1237_DOUT_R() == SET) {
+        if (max_us < 10U) {
+            return 0U; /* Timed out */
+        }
+        cs1237_delay_us(10U);
+        max_us -= 10U;
+    }
+    return 1U;
+}
+
+/**
  * @brief Initialize GPIO pins for CS1237
  */
 void cs1237_init(void)
@@ -66,6 +84,9 @@ void cs1237_init(void)
     CS1237_CLK_L();
     cs1237_delay_us(2000); /* Delay 2ms for startup/wake-up stabilization */
 
+    /* Wait up to 200ms for chip power-up conversion completion */
+    (void)cs1237_wait_drdy_low(200U);
+
     /* Default configuration: PGA 128X, 10Hz, Channel A, VREF On */
     cs1237_configure(CS1237_PGA_128X, CS1237_SPEED_10HZ, CS1237_CH_A, CS1237_VREF_ON);
 }
@@ -78,22 +99,18 @@ void cs1237_init(void)
 int32_t cs1237_read_adc_raw(uint8_t *success)
 {
     int32_t raw_data = 0;
-    uint32_t timeout = 100000; /* Optimized timeout to prevent CPU starvation */
     int i;
 
-    if (success) {
-        *success = 1;
+    /* Wait for DOUT/DRDY to go LOW (data ready) up to 150ms (for 10Hz mode) */
+    if (!cs1237_wait_drdy_low(150U)) {
+        if (success) {
+            *success = 0U;
+        }
+        return 0;
     }
 
-    /* Wait for DOUT/DRDY to go LOW (data ready) */
-    while (CS1237_DOUT_R() == SET) {
-        timeout--;
-        if (timeout == 0) {
-            if (success) {
-                *success = 0;
-            }
-            return 0;
-        }
+    if (success) {
+        *success = 1U;
     }
 
     /* Read 24-bit data */
@@ -142,16 +159,12 @@ int32_t cs1237_read_adc_signed(uint8_t *success)
  */
 void cs1237_write_reg(uint8_t reg_val)
 {
-    uint32_t timeout = 100000;
     int i;
     uint8_t cmd = CS1237_CMD_WRITE;
 
     /* 1. Wait for DOUT/DRDY to go LOW */
-    while (CS1237_DOUT_R() == SET) {
-        timeout--;
-        if (timeout == 0) {
-            return; /* Timeout occurred */
-        }
+    if (!cs1237_wait_drdy_low(150U)) {
+        return; /* Timeout occurred */
     }
 
     /* 2. Clock out 24 dummy/ADC pulses (pulses 1-24) */
@@ -231,16 +244,12 @@ void cs1237_write_reg(uint8_t reg_val)
 uint8_t cs1237_read_reg(void)
 {
     uint8_t reg_val = 0;
-    uint32_t timeout = 100000;
     int i;
     uint8_t cmd = CS1237_CMD_READ;
 
     /* 1. Wait for DOUT/DRDY to go LOW */
-    while (CS1237_DOUT_R() == SET) {
-        timeout--;
-        if (timeout == 0) {
-            return 0; /* Timeout occurred */
-        }
+    if (!cs1237_wait_drdy_low(150U)) {
+        return 0; /* Timeout occurred */
     }
 
     /* 2. Clock out 24 dummy/ADC pulses (pulses 1-24) */

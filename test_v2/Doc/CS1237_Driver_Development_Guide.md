@@ -17,8 +17,8 @@
 
 | CS1237 信号 | GD32F470 引脚 | GPIO 模式 | 描述 |
 | :--- | :--- | :--- | :--- |
-| **SCLK** | **GPIOC Pin 3 (PC3)** | 推挽输出 (Push-Pull, 50MHz) | 时钟信号驱动线 |
-| **DOUT / DRDY** | **GPIOC Pin 2 (PC2)** | 上拉双向 (Input/Output Bi-directional) | 兼作数据输出线与数据就绪指示线 |
+| **SCLK** | **GPIOC Pin 6 (PC6)** | 推挽输出 (Push-Pull, 50MHz) | 时钟信号驱动线 |
+| **DOUT / DRDY** | **GPIOC Pin 7 (PC7)** | 上拉双向 (Input/Output Bi-directional) | 兼作数据输出线与数据就绪指示线 |
 
 ---
 
