@@ -670,6 +670,11 @@
               <FilePath>..\User\lwip_app\lwip_demo.c</FilePath>
             </File>
             <File>
+              <FileName>tcp_client_app.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\lwip_app\tcp_client_app.c</FilePath>
+            </File>
+            <File>
               <FileName>tcp_server_demo.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\lwip_app\tcp_server_demo.c</FilePath>

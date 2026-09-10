@@ -12,7 +12,7 @@
 #include "lwip/dhcp.h"
 #include "netif/etharp.h"
 #include "ethernetif.h"
-#include "tcp_server_demo.h"
+#include "tcp_client_app.h"
 
 /* Initial Fallback Static IP Configuration (if DHCP fails or before DHCP bound) */
 #define BOARD_IP_ADDR0   0

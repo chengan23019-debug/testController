@@ -144,6 +144,92 @@ void app_dyno_update_telemetry(float torque_nm, float speed_rpm, float elec_v, f
 }
 
 /**
+  * @brief  更新 CS1237 扭矩测量数据
+  */
+void app_dyno_update_torque(float torque_nm)
+{
+    if (g_dyno_mutex != NULL && xSemaphoreTake(g_dyno_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        g_dyno_status.torque_nm = torque_nm;
+
+        if (g_dyno_status.speed_rpm > 0.1f || g_dyno_status.speed_rpm < -0.1f) {
+            g_dyno_status.mech_power_w = (torque_nm * g_dyno_status.speed_rpm) / 9.549297f;
+        } else {
+            g_dyno_status.mech_power_w = 0.0f;
+        }
+
+        if (g_dyno_status.elec_power > 1.0f && g_dyno_status.mech_power_w > 0.0f) {
+            g_dyno_status.efficiency = (g_dyno_status.mech_power_w / g_dyno_status.elec_power) * 100.0f;
+            if (g_dyno_status.efficiency > 100.0f) g_dyno_status.efficiency = 100.0f;
+        } else {
+            g_dyno_status.efficiency = 0.0f;
+        }
+
+        xSemaphoreGive(g_dyno_mutex);
+    }
+}
+
+/**
+  * @brief  更新转速测量数据
+  */
+void app_dyno_update_speed(float speed_rpm)
+{
+    if (g_dyno_mutex != NULL && xSemaphoreTake(g_dyno_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        g_dyno_status.speed_rpm = speed_rpm;
+
+        if (speed_rpm > 0.1f || speed_rpm < -0.1f) {
+            g_dyno_status.mech_power_w = (g_dyno_status.torque_nm * speed_rpm) / 9.549297f;
+        } else {
+            g_dyno_status.mech_power_w = 0.0f;
+        }
+
+        if (g_dyno_status.elec_power > 1.0f && g_dyno_status.mech_power_w > 0.0f) {
+            g_dyno_status.efficiency = (g_dyno_status.mech_power_w / g_dyno_status.elec_power) * 100.0f;
+            if (g_dyno_status.efficiency > 100.0f) g_dyno_status.efficiency = 100.0f;
+        } else {
+            g_dyno_status.efficiency = 0.0f;
+        }
+
+        xSemaphoreGive(g_dyno_mutex);
+    }
+}
+
+/**
+  * @brief  更新 CS1238 直流测量数据 (CH1=电压, CH2=电流)
+  */
+void app_dyno_update_dc(float dc_voltage_v, float dc_current_a)
+{
+    if (g_dyno_mutex != NULL && xSemaphoreTake(g_dyno_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        g_dyno_status.dc_voltage = dc_voltage_v;
+        g_dyno_status.dc_current = dc_current_a;
+        g_dyno_status.dc_power   = dc_voltage_v * dc_current_a;
+
+        xSemaphoreGive(g_dyno_mutex);
+    }
+}
+
+/**
+  * @brief  更新 HLW8112 交流电力参量
+  */
+void app_dyno_update_hlw8112(float elec_v, float elec_i, float elec_p, float pf)
+{
+    if (g_dyno_mutex != NULL && xSemaphoreTake(g_dyno_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+        g_dyno_status.elec_voltage = elec_v;
+        g_dyno_status.elec_current = elec_i;
+        g_dyno_status.elec_power   = elec_p;
+        g_dyno_status.power_factor = pf;
+
+        if (elec_p > 1.0f && g_dyno_status.mech_power_w > 0.0f) {
+            g_dyno_status.efficiency = (g_dyno_status.mech_power_w / elec_p) * 100.0f;
+            if (g_dyno_status.efficiency > 100.0f) g_dyno_status.efficiency = 100.0f;
+        } else {
+            g_dyno_status.efficiency = 0.0f;
+        }
+
+        xSemaphoreGive(g_dyno_mutex);
+    }
+}
+
+/**
   * @brief  更新实际 DAC 输出电压记录
   */
 void app_dyno_update_dac_voltage(float dac_v)

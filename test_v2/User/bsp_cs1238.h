@@ -6,7 +6,7 @@
 /* GPIO Pin Configuration for CS1238 (Software 2-Wire Interface) */
 #define CS1238_CLK_RCU       RCU_GPIOF
 #define CS1238_CLK_PORT      GPIOF
-#define CS1238_CLK_PIN       GPIO_PIN_6
+#define CS1238_CLK_PIN       GPIO_PIN_8
 
 #define CS1238_DOUT_RCU      RCU_GPIOF
 #define CS1238_DOUT_PORT     GPIOF

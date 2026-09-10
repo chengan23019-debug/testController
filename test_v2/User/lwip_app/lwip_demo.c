@@ -42,8 +42,8 @@ void lwip_demo_init(void)
     dhcp_start(&g_netif);
     printf("[DHCP] Requesting IP address from DHCP server...\r\n");
 
-    /* Initialize TCP Server Demo on port 8080 */
-    tcp_server_demo_init();
+    /* Initialize TCP Client Application */
+    tcp_client_app_init();
 }
 
 void lwip_demo_poll(void)
@@ -106,4 +106,8 @@ void lwip_demo_poll(void)
             printf("[DHCP] IP address released or lost!\r\n");
         }
     }
+
+    /* 7. Poll TCP Client Connection & Auto-Reconnect State Machine */
+    tcp_client_app_poll();
 }
+

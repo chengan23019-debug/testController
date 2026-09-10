@@ -36,18 +36,22 @@ typedef struct {
     uint8_t  work_mode;       /* 当前工作模式 */
     uint8_t  alarm_flags;     /* 报警与状态标志位 */
 
-    /* 机械测量参量 */
-    float    torque_nm;       /* 实际扭矩 (N.m) */
+    /* 机械测量参量 (CS1237 扭矩 + 编码器转速) */
+    float    torque_nm;       /* 实际扭矩 (N.m, CS1237 测量) */
     float    speed_rpm;       /* 实际转速 (RPM) */
     float    mech_power_w;    /* 计算机械功率 (W) */
 
     /* 当前控制输出 */
     float    dac_voltage;     /* 当前 DAC 输出电压 (V) */
 
-    /* HLW8112 电参量 */
-    float    elec_voltage;    /* 电机电压 (V) */
-    float    elec_current;    /* 电机电流 (A) */
-    float    elec_power;      /* 电机输入功率 (W) */
+    /* CS1238 直流测量参量 */
+    float    dc_voltage;      /* 直流电压 (V, CS1238 CH1) */
+    float    dc_current;      /* 直流电流 (A, CS1238 CH2) */
+
+    /* HLW8112 交流电参量 */
+    float    elec_voltage;    /* 交流电压 (V) */
+    float    elec_current;    /* 交流电流 (A) */
+    float    elec_power;      /* 交流电功率 (W) */
     float    power_factor;    /* 功率因数 */
     float    efficiency;      /* 效率 (%) */
 } proto_bin_telemetry_payload_t;

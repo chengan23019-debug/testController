@@ -60,6 +60,8 @@ uint32_t proto_bin_pack_telemetry(uint8_t seq, const dyno_system_status_t *statu
     payload->speed_rpm    = status->speed_rpm;
     payload->mech_power_w = status->mech_power_w;
     payload->dac_voltage  = status->dac_voltage;
+    payload->dc_voltage   = status->dc_voltage;
+    payload->dc_current   = status->dc_current;
     payload->elec_voltage = status->elec_voltage;
     payload->elec_current = status->elec_current;
     payload->elec_power   = status->elec_power;

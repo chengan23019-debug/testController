@@ -45,18 +45,23 @@ typedef struct {
     dyno_mode_t mode;           /* 当前运行模式 */
     float       target_value;   /* 当前目标设定值 (手动V / 恒扭矩N.m / 恒功率W) */
     
-    /* 机械参量 (来自于 CS1238 和脉冲捕获) */
-    float       torque_nm;      /* 实际扭矩 (N.m) */
+    /* 机械参量 (来自于 CS1237 扭矩测量与脉冲转速) */
+    float       torque_nm;      /* 实际扭矩 (N.m, CS1237 测量) */
     float       speed_rpm;      /* 实际转速 (RPM) */
     float       mech_power_w;   /* 计算机械功率 (W) */
 
     /* 实际驱动输出 */
     float       dac_voltage;    /* 当前 DAC 实时输出电压 (V) */
 
-    /* 电力参量 (来自于 HLW8112) */
-    float       elec_voltage;   /* 电机交流电压 (V) */
-    float       elec_current;   /* 电机交流电流 (A) */
-    float       elec_power;     /* 电机电功率 (W) */
+    /* 直流电参量 (来自于 CS1238: CH1=电压, CH2=电流) */
+    float       dc_voltage;     /* 直流电压 (V, CS1238 CH1) */
+    float       dc_current;     /* 直流电流 (A, CS1238 CH2) */
+    float       dc_power;       /* 直流功率 (W) = V * I */
+
+    /* 交流电力参量 (来自于 HLW8112) */
+    float       elec_voltage;   /* 交流电压 (V) */
+    float       elec_current;   /* 交流电流 (A) */
+    float       elec_power;     /* 交流电功率 (W) */
     float       power_factor;   /* 功率因数 */
     float       efficiency;     /* 效率 (%) */
 
@@ -78,6 +83,10 @@ void app_dyno_emergency_stop(void);
 void app_dyno_get_status(dyno_system_status_t *out_status);
 
 /* 传感器数据更新 API (供底层采样任务调用) */
+void app_dyno_update_torque(float torque_nm);
+void app_dyno_update_speed(float speed_rpm);
+void app_dyno_update_dc(float dc_voltage_v, float dc_current_a);
+void app_dyno_update_hlw8112(float elec_v, float elec_i, float elec_p, float pf);
 void app_dyno_update_telemetry(float torque_nm, float speed_rpm, float elec_v, float elec_i, float elec_p, float pf);
 void app_dyno_update_dac_voltage(float dac_v);
 

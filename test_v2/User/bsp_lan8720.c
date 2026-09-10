@@ -5,6 +5,7 @@
 
 #include "bsp_lan8720.h"
 #include "systick.h"
+#include "lwipopts.h"
 
 /* Saved PHY Hardware Address */
 static uint16_t sg_phy_addr = LAN8720_DEFAULT_PHY_ADDR;
@@ -226,8 +227,12 @@ int bsp_lan8720_init(void)
             break;
     }
 
-    /* Initialize ENET MAC & DMA hardware with negotiated media mode */
+    /* Initialize ENET MAC & DMA hardware with negotiated media mode and Hardware Checksum Offload */
+#if defined(CHECKSUM_BY_HARDWARE) && (CHECKSUM_BY_HARDWARE == 1)
+    if (ERROR == enet_init(media_mode, ENET_AUTOCHECKSUM_ACCEPT_FAILFRAMES, ENET_BROADCAST_FRAMES_PASS)) {
+#else
     if (ERROR == enet_init(media_mode, ENET_NO_AUTOCHECKSUM, ENET_BROADCAST_FRAMES_PASS)) {
+#endif
         printf("[LAN8720 Driver] Error: enet_init failed!\r\n");
         return LAN8720_ERROR;
     }
@@ -244,6 +249,18 @@ int bsp_lan8720_init(void)
     /* Initialize Tx and Rx DMA descriptor chain */
     enet_descriptors_chain_init(ENET_DMA_TX);
     enet_descriptors_chain_init(ENET_DMA_RX);
+
+#if defined(CHECKSUM_BY_HARDWARE) && (CHECKSUM_BY_HARDWARE == 1)
+    /* Configure hardware checksum insertion for all Tx DMA descriptors */
+    {
+        extern enet_descriptors_struct txdesc_tab[ENET_TXBUF_NUM];
+        uint32_t i;
+        for (i = 0U; i < ENET_TXBUF_NUM; i++) {
+            enet_transmit_checksum_config(&txdesc_tab[i], ENET_CHECKSUM_TCPUDPICMP_FULL);
+        }
+        printf("[LAN8720 Driver] Hardware Checksum Offload Engine Enabled (Tx & Rx).\r\n");
+    }
+#endif
 
     /* Enable ENET MAC and DMA transmit & receive */
     enet_enable();

@@ -62,28 +62,36 @@ static void app_task_network(void *pvParameters)
     (void)pvParameters;
 
     for (;;) {
-        /* Non-blocking LwIP network packet & timer polling */
+        /* 1. Non-blocking LwIP network packet, timers & client auto-reconnect polling */
         lwip_demo_poll();
 
-        /* Push binary telemetry packet at 50Hz (every 20ms) to connected TCP Client */
+        /* 2. Push 56-byte binary telemetry packet at 50Hz (every 20ms) to Center Server (Nagle disabled) */
         if ((sys_now() - last_telemetry_ticks) >= 20U) {
             last_telemetry_ticks = sys_now();
-            tcp_server_send_telemetry();
+            tcp_client_send_telemetry();
         }
 
-        /* Non-blocking Ethernet Link status check every 3000ms */
+        /* 3. Non-blocking Ethernet Link & TCP Client status check every 3000ms */
         if ((sys_now() - last_link_ticks) >= 3000U) {
             last_link_ticks = sys_now();
             link_status = bsp_lan8702_get_link_status();
-            printf("GD32F470 Ethernet Link: %s | Current IP: %d.%d.%d.%d | TCP Port: 8080\r\n", 
-                   link_status ? "LINK UP [Connected]" : "LINK DOWN [Disconnected]",
+            printf("[NetTask] Link: %s | TCP Client: %s | Local IP: %d.%d.%d.%d\r\n", 
+                   link_status ? "UP" : "DOWN",
+                   tcp_client_get_state_str(),
                    (uint8_t)(g_netif.ip_addr.addr),
                    (uint8_t)(g_netif.ip_addr.addr >> 8),
                    (uint8_t)(g_netif.ip_addr.addr >> 16),
                    (uint8_t)(g_netif.ip_addr.addr >> 24));
         }
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        /* 4. Adaptive FreeRTOS Task Scheduling (Optimization 5) */
+        if (tcp_client_is_burst_mode()) {
+            /* State A: SDRAM high-speed burst downloading -> minimal delay for maximum throughput */
+            vTaskDelay(pdMS_TO_TICKS(1));
+        } else {
+            /* State B: Standard 50Hz telemetry -> 5ms delay to yield CPU for PID control & sampling */
+            vTaskDelay(pdMS_TO_TICKS(5));
+        }
     }
 }
 
@@ -116,20 +124,16 @@ static void app_task_cs1237(void *pvParameters)
     printf("CS1237 Register Read Code: 0x%02X\r\n", reg_val);
 
     for (;;) {
-        /* Sample ADC with Auto-Range gain switching */
+        /* CS1237: 测量扭矩 (Load Cell) */
         adc_val = cs1237_read_adc_auto_range(&success, &active_pga);
         if (success) {
             voltage_mv = cs1237_raw_to_voltage_mv(adc_val, active_pga, 3.3f);
-            printf("[CS1237 Auto-Range] Gain: %3dX | ADC Raw: %8d | Voltage: %9.4f mV (%7.2f uV)\r\n",
-                   cs1237_get_pga_multiplier(active_pga),
-                   (int)adc_val,
-                   voltage_mv,
-                   voltage_mv * 1000.0f);
-        } else {
-            printf("[CS1237] ADC Read Timeout / DRDY Not Ready\r\n");
+            
+            /* 同步更新扭矩测量值到全局数据中心 */
+            app_dyno_update_torque(voltage_mv);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -142,24 +146,16 @@ static void app_task_hlw8112(void *pvParameters)
     printf("\r\n=== HLW8112 AC Energy Metering Task Started ===\r\n");
 
     for (;;) {
+        /* HLW8112: 测量交流电参量 (电压、电流、功率、功率因数) */
         hlw8112_read_data(&hlw_data);
         if (hlw_data.calib_ok) {
-            printf("[HLW8112 Measure] Voltage: %6.2f V | Current: %7.3f A (%6.1f mA) | ActivePower: %7.2f W | PF: %5.3f | Freq: %5.2f Hz | Angle: %5.1f Deg | Energy: %.4f kWh\r\n",
-                   hlw_data.voltage,
-                   hlw_data.current_a,
-                   hlw_data.current_a_ma,
-                   hlw_data.active_power_a,
-                   hlw_data.power_factor,
-                   hlw_data.frequency,
-                   hlw_data.phase_angle,
-                   hlw_data.active_energy_a);
-        } else {
-            printf("[HLW8112 Status] Calibration Checksum Failed / Check SPI Wiring! (V: %6.2f V | I: %7.3f A)\r\n",
-                   hlw_data.voltage,
-                   hlw_data.current_a);
+            app_dyno_update_hlw8112(hlw_data.voltage, 
+                                    hlw_data.current_a, 
+                                    hlw_data.active_power_a, 
+                                    hlw_data.power_factor);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -175,22 +171,14 @@ static void app_task_cs1238(void *pvParameters)
     printf("CS1238 Register Read Code: 0x%02X\r\n", reg_val);
 
     for (;;) {
-        /* Read CH1, CH2, and internal temperature using CS1238 driver */
+        /* CS1238: 测量直流电参量 (CH1: 直流电压, CH2: 直流电流) */
         cs1238_read_all_channels(&cs1238_data, 3.3f);
         if (cs1238_data.success) {
-            printf("[CS1238 Smart Auto-Gain] CH1: %3dX Gain | %8d Raw (%8.4f mV) || CH2: %3dX Gain | %8d Raw (%8.4f mV) || Temp: %8d\r\n",
-                   cs1238_get_pga_multiplier(cs1238_data.pga_ch1),
-                   (int)cs1238_data.raw_ch1,
-                   cs1238_data.volt_ch1_mv,
-                   cs1238_get_pga_multiplier(cs1238_data.pga_ch2),
-                   (int)cs1238_data.raw_ch2,
-                   cs1238_data.volt_ch2_mv,
-                   (int)cs1238_data.raw_temp);
-        } else {
-            printf("[CS1238] Multi-Channel Read Timeout / DRDY Not Ready\r\n");
+            /* 同步更新直流电压 (CH1) 与直流电流 (CH2) 到全局数据中心 */
+            app_dyno_update_dc(cs1238_data.volt_ch1_mv, cs1238_data.volt_ch2_mv);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
@@ -217,7 +205,7 @@ int main(void)
 
     /* Initialize CS1238 Dual-Channel 24-bit ADC Peripheral */
     cs1238_init();
-    printf("CS1238 Dual-CH 24-bit ADC Peripheral Initialized (CLK: PF6, DOUT: PF9)\r\n");
+    printf("CS1238 Dual-CH 24-bit ADC Peripheral Initialized (CLK: PF8, DOUT: PF9)\r\n");
 
     /* Initialize HLW8112 AC Metering Peripheral */
     hlw8112_init();
