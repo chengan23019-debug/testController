@@ -458,6 +458,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\bsp_sdram.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp_timer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -502,6 +507,16 @@
               <FileName>gd32f4xx_exmc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_exmc.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>gd32f4xx_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Firmware\GD32F4xx_standard_peripheral\Source\gd32f4xx_exti.c</FilePath>
             </File>
           </Files>
         </Group>

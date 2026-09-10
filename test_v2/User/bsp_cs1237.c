@@ -3,15 +3,18 @@
 
 /* Global state tracking for CS1237 */
 static cs1237_pga_t   sg_current_pga   = CS1237_PGA_128X;
-static cs1237_speed_t sg_current_speed = CS1237_SPEED_10HZ;
+static cs1237_speed_t sg_current_speed = CS1237_SPEED_640HZ;
 static cs1237_ch_t    sg_current_ch    = CS1237_CH_A;
 static cs1237_vref_t  sg_current_vref  = CS1237_VREF_ON;
+
+/* 16点环形缓冲区实例 */
+static torque_ring_buffer_t g_torque_buf = {0};
 
 /* Clock delay helper */
 static void cs1237_delay_us(uint32_t us)
 {
     /* GD32F470 at 240MHz runs 240 cycles per microsecond.
-       We use a larger multiplier (120) to ensure SCLK high/low time 
+       We use a multiplier (120) to ensure SCLK high/low time 
        is safely above the 455ns minimum limit even under compiler optimizations. */
     volatile uint32_t count = us * 120;
     while (count--) {
@@ -43,24 +46,27 @@ static void cs1237_dout_as_output(void)
 
 /**
  * @brief Wait for DOUT/DRDY pin to fall LOW (Data Ready) with configurable millisecond timeout
- * @param timeout_ms Maximum time to wait in milliseconds (e.g. 150ms for 10Hz data rate)
+ * @param timeout_ms Maximum time to wait in milliseconds (e.g. 10ms for 640Hz data rate)
  * @return 1 if DRDY went LOW, 0 if timed out
  */
 static uint8_t cs1237_wait_drdy_low(uint32_t timeout_ms)
 {
     uint32_t max_us = timeout_ms * 1000U;
+    if (max_us > 1000U) {
+        max_us = 1000U; /* Cap timeout to 1ms to prevent task starvation */
+    }
     while (CS1237_DOUT_R() == SET) {
-        if (max_us < 10U) {
+        if (max_us < 5U) {
             return 0U; /* Timed out */
         }
-        cs1237_delay_us(10U);
-        max_us -= 10U;
+        cs1237_delay_us(5U);
+        max_us -= 5U;
     }
     return 1U;
 }
 
 /**
- * @brief Initialize GPIO pins for CS1237
+ * @brief Initialize GPIO pins and default 640Hz config for CS1237
  */
 void cs1237_init(void)
 {
@@ -84,11 +90,144 @@ void cs1237_init(void)
     CS1237_CLK_L();
     cs1237_delay_us(2000); /* Delay 2ms for startup/wake-up stabilization */
 
-    /* Wait up to 200ms for chip power-up conversion completion */
-    (void)cs1237_wait_drdy_low(200U);
+    /* Wait up to 50ms for chip power-up conversion completion */
+    (void)cs1237_wait_drdy_low(50U);
 
-    /* Default configuration: PGA 128X, 10Hz, Channel A, VREF On */
-    cs1237_configure(CS1237_PGA_128X, CS1237_SPEED_10HZ, CS1237_CH_A, CS1237_VREF_ON);
+    /* Default configuration: PGA 128X, 640Hz (Doc requirement), Channel A, VREF On */
+    cs1237_configure(CS1237_PGA_128X, CS1237_SPEED_640HZ, CS1237_CH_A, CS1237_VREF_ON);
+
+    /* Initialize EXTI interrupt for DOUT falling edge */
+    cs1237_exti_init();
+}
+
+/**
+ * @brief Initialize EXTI Falling Edge Interrupt for CS1237 DOUT (PF7)
+ */
+void cs1237_exti_init(void)
+{
+    /* Enable SYSCFG clock */
+    rcu_periph_clock_enable(RCU_SYSCFG);
+
+    /* Connect EXTI Line 7 to GPIO Port F */
+    syscfg_exti_line_config(CS1237_EXTI_PORT_SOURCE, CS1237_EXTI_PIN_SOURCE);
+
+    /* Configure EXTI Line 7 for Falling Edge */
+    exti_init(CS1237_EXTI_LINE, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
+    exti_interrupt_flag_clear(CS1237_EXTI_LINE);
+
+    /* Enable NVIC IRQ with FreeRTOS-safe priority (Priority 6) */
+    nvic_irq_enable(CS1237_EXTI_IRQn, 6, 0);
+}
+
+/**
+ * @brief Fast 27-pulse read of 24-bit ADC data (MSB first) + 3 release pulses
+ *        Designed for ISR or high-speed polling execution (~15us total)
+ * @return 32-bit signed ADC value
+ */
+int32_t cs1237_read_27pulse_fast(void)
+{
+    int32_t raw_data = 0;
+    int i;
+
+    /* Read 24-bit data */
+    for (i = 0; i < 24; i++) {
+        CS1237_CLK_H();
+        cs1237_delay_us(1);
+        raw_data = (raw_data << 1);
+        if (CS1237_DOUT_R() == SET) {
+            raw_data |= 1;
+        }
+        CS1237_CLK_L();
+        cs1237_delay_us(1);
+    }
+
+    /* Send 3 extra clock pulses (pulses 25, 26, 27) to release DOUT to high */
+    for (i = 0; i < 3; i++) {
+        CS1237_CLK_H();
+        cs1237_delay_us(1);
+        CS1237_CLK_L();
+        cs1237_delay_us(1);
+    }
+
+    /* Sign extension from 24-bit to 32-bit */
+    if (raw_data & 0x800000) {
+        raw_data |= 0xFF000000;
+    }
+
+    return raw_data;
+}
+
+/**
+ * @brief Push raw ADC sample into 16-point ring buffer (Called from ISR or 640Hz poll)
+ */
+void torque_filter_push_isr(int32_t raw_adc)
+{
+    if (g_torque_buf.count >= TORQUE_RING_BUF_SIZE) {
+        g_torque_buf.sum -= g_torque_buf.buffer[g_torque_buf.head];
+    } else {
+        g_torque_buf.count++;
+    }
+
+    g_torque_buf.buffer[g_torque_buf.head] = raw_adc;
+    g_torque_buf.sum += raw_adc;
+    g_torque_buf.head = (g_torque_buf.head + 1U) % TORQUE_RING_BUF_SIZE;
+}
+
+/**
+ * @brief Fetch 20ms oversampled arithmetic average from ring buffer (Called from 50Hz task)
+ * @return 32-bit averaged signed ADC raw value
+ */
+int32_t torque_filter_get_averaged(void)
+{
+    int32_t avg_val = 0;
+    
+    exti_interrupt_disable(CS1237_EXTI_LINE);
+    if (g_torque_buf.count > 0) {
+        avg_val = (int32_t)(g_torque_buf.sum / (int64_t)g_torque_buf.count);
+    }
+    exti_interrupt_enable(CS1237_EXTI_LINE);
+
+    return avg_val;
+}
+
+/**
+ * @brief Get filtered physical torque in N.m based on 20ms oversampling
+ */
+float cs1237_get_filtered_torque_nm(float coeff)
+{
+    float mv = 0.0f;
+    uint8_t success = 0;
+    int32_t avg_raw = torque_filter_get_averaged();
+    if (avg_raw == 0 && g_torque_buf.count == 0) {
+        /* If ring buffer has not received EXTI interrupts yet, do a fast synchronous read */
+        avg_raw = cs1237_read_adc_signed(&success);
+        if (success) {
+            torque_filter_push_isr(avg_raw);
+        }
+    }
+    mv = cs1237_raw_to_voltage_mv(avg_raw, sg_current_pga, 3.3f);
+    return mv * coeff;
+}
+
+/**
+ * @brief EXTI5_9 IRQ Handler subroutine for CS1237 DOUT falling edge
+ */
+void cs1237_exti_isr(void)
+{
+    if (RESET != exti_interrupt_flag_get(CS1237_EXTI_LINE)) {
+        /* 1. 立即暂时关闭 EXTI 中断，防止在移位读取 24bit 数据时 DOUT 引脚跳变产生 EXTI 嵌套中断风暴 */
+        exti_interrupt_disable(CS1237_EXTI_LINE);
+        exti_interrupt_flag_clear(CS1237_EXTI_LINE);
+
+        if (CS1237_DOUT_R() == RESET) {
+            int32_t raw = cs1237_read_27pulse_fast();
+            torque_filter_push_isr(raw);
+        }
+
+        /* 2. 发送完 27 个脉冲后 DOUT 已释放为高电平，彻底清除期间产生的所有挂起标志并重新使能 */
+        exti_interrupt_flag_clear(CS1237_EXTI_LINE);
+        exti_interrupt_enable(CS1237_EXTI_LINE);
+    }
 }
 
 /**
@@ -101,8 +240,8 @@ int32_t cs1237_read_adc_raw(uint8_t *success)
     int32_t raw_data = 0;
     int i;
 
-    /* Wait for DOUT/DRDY to go LOW (data ready) up to 150ms (for 10Hz mode) */
-    if (!cs1237_wait_drdy_low(150U)) {
+    /* Wait for DOUT/DRDY to go LOW (data ready) up to 20ms */
+    if (!cs1237_wait_drdy_low(20U)) {
         if (success) {
             *success = 0U;
         }
@@ -163,7 +302,7 @@ void cs1237_write_reg(uint8_t reg_val)
     uint8_t cmd = CS1237_CMD_WRITE;
 
     /* 1. Wait for DOUT/DRDY to go LOW */
-    if (!cs1237_wait_drdy_low(150U)) {
+    if (!cs1237_wait_drdy_low(20U)) {
         return; /* Timeout occurred */
     }
 
@@ -248,7 +387,7 @@ uint8_t cs1237_read_reg(void)
     uint8_t cmd = CS1237_CMD_READ;
 
     /* 1. Wait for DOUT/DRDY to go LOW */
-    if (!cs1237_wait_drdy_low(150U)) {
+    if (!cs1237_wait_drdy_low(20U)) {
         return 0; /* Timeout occurred */
     }
 
@@ -393,12 +532,6 @@ int32_t cs1237_read_adc_auto_range(uint8_t *success, cs1237_pga_t *out_pga)
 
     abs_val = (adc_val < 0) ? -adc_val : adc_val;
 
-    /* 
-     * Auto-Range Threshold Logic:
-     * Full-scale 24-bit signed max value = 8,388,607 (0x7FFFFF)
-     * Upper Over-range Limit: 7,500,000 (~90% full scale) -> Decrease gain to prevent clipping
-     * Lower Under-range Limits: Increase gain for higher resolution if next gain won't overflow
-     */
     if (abs_val > 7500000) {
         /* High Signal: Step DOWN gain */
         if (sg_current_pga == CS1237_PGA_128X) {

@@ -45,6 +45,7 @@ void tcp_client_app_init(void);
 void tcp_client_app_poll(void);
 void tcp_client_set_server(uint8_t ip0, uint8_t ip1, uint8_t ip2, uint8_t ip3, uint16_t port);
 void tcp_client_send_telemetry(void);
+uint32_t tcp_client_get_sent_count(void);
 bool tcp_client_send_sdram_burst_chunk(const uint8_t *chunk_data, uint16_t chunk_len, bool has_more_data);
 
 bool tcp_client_is_connected(void);

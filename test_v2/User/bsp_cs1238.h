@@ -2,6 +2,7 @@
 #define BSP_CS1238_H
 
 #include "gd32f4xx.h"
+#include <stdint.h>
 
 /* GPIO Pin Configuration for CS1238 (Software 2-Wire Interface) */
 #define CS1238_CLK_RCU       RCU_GPIOF
@@ -15,6 +16,15 @@
 /* CS1238 SPI commands (7-bit commands shifted during pulses 30-36) */
 #define CS1238_CMD_READ      0x56  /* Read Configuration Register */
 #define CS1238_CMD_WRITE     0x65  /* Write Configuration Register */
+
+/* 物理转换缩放系数: mV -> V 或 mV -> A */
+#ifndef DC_V_SCALE
+#define DC_V_SCALE           0.001f  /* mV -> V (默认直接除以1000) */
+#endif
+
+#ifndef DC_I_SCALE
+#define DC_I_SCALE           0.001f  /* mV -> A */
+#endif
 
 /* 
  * CS1238 Configuration Register Bit Definitions (8-bit register)
@@ -70,6 +80,13 @@ typedef enum {
     CS1238_VREF_OFF = 0x01  /* Internal reference output disabled */
 } cs1238_vref_t;
 
+/* 一阶 IIR 低通滤波器结构体 */
+typedef struct {
+    float   filtered_val;
+    float   alpha;
+    uint8_t initialized;
+} lowpass_filter_t;
+
 /* Multi-channel CS1238 Measurement Result Structure with Independent Per-Channel PGA */
 typedef struct {
     int32_t      raw_ch1;       /* CH1 Signed 24-bit raw ADC reading */
@@ -101,5 +118,10 @@ int32_t cs1238_read_channel_adc(cs1238_ch_t ch, uint8_t *success);
 int32_t cs1238_read_channel_smart_auto_range(cs1238_ch_t ch, uint8_t *success, cs1238_pga_t *out_pga);
 float cs1238_raw_to_voltage_mv(int32_t raw_val, cs1238_pga_t pga, float vref_volts);
 void cs1238_read_all_channels(cs1238_data_t *data, float vref_volts);
+
+/* 一阶 IIR 滤波器 API */
+float lowpass_filter_apply(lowpass_filter_t *filter, float raw_val);
+void  lowpass_filter_reset(lowpass_filter_t *filter, float initial_val);
+void  cs1238_read_dc_filtered(float *out_dc_v, float *out_dc_i);
 
 #endif /* BSP_CS1238_H */

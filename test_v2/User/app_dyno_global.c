@@ -105,10 +105,15 @@ void app_dyno_get_status(dyno_system_status_t *out_status)
 {
     if (out_status == NULL) return;
 
-    if (g_dyno_mutex != NULL && xSemaphoreTake(g_dyno_mutex, pdMS_TO_TICKS(20)) == pdTRUE) {
+    if (g_dyno_mutex != NULL && xSemaphoreTake(g_dyno_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
         g_dyno_status.timestamp_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
         memcpy(out_status, &g_dyno_status, sizeof(dyno_system_status_t));
         xSemaphoreGive(g_dyno_mutex);
+    } else {
+        taskENTER_CRITICAL();
+        g_dyno_status.timestamp_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
+        memcpy(out_status, &g_dyno_status, sizeof(dyno_system_status_t));
+        taskEXIT_CRITICAL();
     }
 }
 

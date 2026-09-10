@@ -180,6 +180,8 @@ static err_t app_tcp_client_sent(void *arg, struct tcp_pcb *tpcb, u16_t len)
     return ERR_OK;
 }
 
+extern struct netif g_netif;
+
 /*!
     \brief      Periodic TCP Client State Machine Poll (Auto-Reconnect)
 */
@@ -187,6 +189,18 @@ void tcp_client_app_poll(void)
 {
     uint32_t now = sys_now();
     err_t err;
+
+    /* 前置核心门禁: 必须在成功获取到合法本地 IP (非 0.0.0.0) 且网线处于 Link UP 时才允许发起 TCP 连接 */
+    if (g_netif.ip_addr.addr == 0 || !netif_is_link_up(&g_netif)) {
+        if (g_client_state != TCP_CLIENT_DISCONNECTED) {
+            if (g_client_pcb != NULL) {
+                tcp_abort(g_client_pcb);
+                g_client_pcb = NULL;
+            }
+            g_client_state = TCP_CLIENT_DISCONNECTED;
+        }
+        return;
+    }
 
     switch (g_client_state) {
         case TCP_CLIENT_DISCONNECTED:
@@ -231,6 +245,8 @@ void tcp_client_app_poll(void)
     }
 }
 
+static uint32_t g_telemetry_sent_count = 0;
+
 /*!
     \brief      发送 50Hz 遥测状态数据帧 (极低延迟、零抖动推流)
 */
@@ -258,9 +274,18 @@ void tcp_client_send_telemetry(void)
             if (err == ERR_OK) {
                 /* 立即刷出，通知以太网 DMA 零延迟发送 */
                 tcp_output(g_client_pcb);
+                g_telemetry_sent_count++;
             }
         }
     }
+}
+
+/*!
+    \brief      获取已发送的遥测数据包总数
+*/
+uint32_t tcp_client_get_sent_count(void)
+{
+    return g_telemetry_sent_count;
 }
 
 /*!

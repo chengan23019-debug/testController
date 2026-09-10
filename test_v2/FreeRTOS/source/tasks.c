@@ -249,6 +249,31 @@ void vTaskDelay( const TickType_t xTicksToDelay )
 	}
 }
 
+void vTaskDelayUntil( TickType_t * const pxPreviousWakeTime, const TickType_t xTimeIncrement )
+{
+	TickType_t xTimeToWake;
+	TickType_t xTicksToDelay;
+
+	if( pxPreviousWakeTime == NULL || xTimeIncrement == ( TickType_t ) 0U )
+	{
+		return;
+	}
+
+	xTimeToWake = *pxPreviousWakeTime + xTimeIncrement;
+	xTicksToDelay = xTimeToWake - xTickCount;
+
+	if( ( ( int32_t ) xTicksToDelay ) <= 0 )
+	{
+		*pxPreviousWakeTime = xTickCount;
+		portYIELD_WITHIN_API();
+	}
+	else
+	{
+		*pxPreviousWakeTime = xTimeToWake;
+		vTaskDelay( xTicksToDelay );
+	}
+}
+
 TickType_t xTaskGetTickCount( void )
 {
 	TickType_t xTicks;
