@@ -200,6 +200,11 @@ int main(void)
     app_dyno_global_init();
     printf("Dynamometer Global Data Center Initialized!\r\n");
 
+    /* === 临时 DAC 50mA 输出测试方法 (0.05V -> 50mA) === */
+    bsp_dac_init();
+    bsp_dac_set_voltage(1, 0.2f);  /* 通道0 (PA4) 输出 50mV，恒流源输出 50mA */
+    printf("[TEST] DAC0 (PA4) set to 0.05V (approx 50mA constant current)\r\n");
+
     printf("Creating FreeRTOS Application Tasks...\r\n");
 
     /* Create Network Task (Priority 6, Stack 1024) */
@@ -208,8 +213,8 @@ int main(void)
     /* Create 50Hz (20ms) Unified Sampling & Telemetry Task (Priority 5, Stack 1024) */
     xTaskCreate(app_task_telemetry_50hz, "Tele50HzTask", 1024, NULL, 5, NULL);
 
-    /* Create Dynamometer Load PID Control Task (Priority 5, Stack 1024) */
-    xTaskCreate(app_task_dyno_control, "DynoCtrlTask", 1024, NULL, 5, NULL);
+    /* 临时屏蔽测功机任务，防止它在空闲模式下把 DAC 刷新回 0V */
+    // xTaskCreate(app_task_dyno_control, "DynoCtrlTask", 1024, NULL, 5, NULL);
 
     /* Create LED Heartbeat Task (Priority 2, Stack 256) */
     xTaskCreate(app_task_led, "LEDTask", 256, NULL, 2, NULL);
