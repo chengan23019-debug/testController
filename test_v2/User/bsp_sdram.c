@@ -10,6 +10,7 @@
 /* 私有函数声明 */
 static void sdram_gpio_config(void);
 static void sdram_delay_us(uint32_t us);
+static void sdram_wait_ready(void);
 
 /**
  * @brief  微秒级简单阻塞延时 (基于主频 240MHz 计算)
@@ -20,6 +21,17 @@ static void sdram_delay_us(uint32_t us)
     volatile uint32_t count = us * 40U;
     while (count--) {
         __NOP();
+    }
+}
+
+/**
+ * @brief  等待 SDRAM 控制器命令执行完成 (轮询 NRDY 标志位)
+ */
+static void sdram_wait_ready(void)
+{
+    uint32_t timeout = 0x000FFFFFU;
+    while ((exmc_flag_get(EXMC_SDRAM_DEVICE0, EXMC_SDRAM_FLAG_NREADY) != RESET) && (timeout > 0U)) {
+        timeout--;
     }
 }
 
@@ -156,6 +168,7 @@ void bsp_sdram_init(void)
     sdram_command_init_struct.auto_refresh_number   = EXMC_SDRAM_AUTO_REFLESH_1_SDCLK;
     sdram_command_init_struct.mode_register_content = 0U;
     exmc_sdram_command_config(&sdram_command_init_struct);
+    sdram_wait_ready();
 
     /* 等待时钟稳定至少 200us */
     sdram_delay_us(300U);
@@ -166,6 +179,7 @@ void bsp_sdram_init(void)
     sdram_command_init_struct.auto_refresh_number   = EXMC_SDRAM_AUTO_REFLESH_1_SDCLK;
     sdram_command_init_struct.mode_register_content = 0U;
     exmc_sdram_command_config(&sdram_command_init_struct);
+    sdram_wait_ready();
 
     /* Step 4.3: 发送连续 8 次自动刷新 (Auto Refresh) 命令 */
     sdram_command_init_struct.command               = EXMC_SDRAM_AUTO_REFRESH;
@@ -173,9 +187,10 @@ void bsp_sdram_init(void)
     sdram_command_init_struct.auto_refresh_number   = EXMC_SDRAM_AUTO_REFLESH_8_SDCLK;
     sdram_command_init_struct.mode_register_content = 0U;
     exmc_sdram_command_config(&sdram_command_init_struct);
+    sdram_wait_ready();
 
     /* Step 4.4: 配置并写入模式寄存器 (Load Mode Register) 命令 */
-    /* 突发长度: 1, 突发类型: 连续, CAS延迟: 3, 标准操作模式, 单次写模式 */
+    /* 突发长度: 1, 突发类型: 连续, CAS延迟: 3, 标准操作模式, 遵循突发写模式 */
     sdram_command_init_struct.command               = EXMC_SDRAM_LOAD_MODE_REGISTER;
     sdram_command_init_struct.bank_select           = EXMC_SDRAM_DEVICE0_SELECT;
     sdram_command_init_struct.auto_refresh_number   = EXMC_SDRAM_AUTO_REFLESH_1_SDCLK;
@@ -183,8 +198,9 @@ void bsp_sdram_init(void)
                                                                 SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL |
                                                                 SDRAM_MODEREG_CAS_LATENCY_3 |
                                                                 SDRAM_MODEREG_OPERATING_MODE_STANDARD |
-                                                                SDRAM_MODEREG_WRITEBURST_MODE_SINGLE);
+                                                                SDRAM_MODEREG_WRITEBURST_MODE_PROGRAMMED);
     exmc_sdram_command_config(&sdram_command_init_struct);
+    sdram_wait_ready();
 
     /* Step 4.5: 配置自动刷新计数器 (Auto Refresh Interval)
      * 刷新要求: 64ms 内完成 8192 次刷新 => 单次刷新间隔 = 64ms / 8192 = 7.8125us
@@ -200,9 +216,10 @@ void bsp_sdram_init(void)
     }
     exmc_sdram_refresh_count_set(refresh_count);
 
-    /* Step 4.6: 启用高速读采样延迟控制 (优化高频读信号建立时间) */
-    exmc_sdram_readsample_enable(ENABLE);
-    exmc_sdram_readsample_config(EXMC_SDRAM_6_DELAY_CELL, EXMC_SDRAM_READSAMPLE_0_EXTRAHCLK);
+    /* Step 4.6: 读采样时钟配置
+     * 默认先禁用额外的延时单元链，避免未经校准的固定 6 Delay Cell 导致采样时钟相移错位
+     */
+    exmc_sdram_readsample_enable(DISABLE);
 }
 
 /**
@@ -335,8 +352,9 @@ uint8_t bsp_sdram_test(void)
         expected = (uint32_t)(0xAA550000U | offset);
         actual = p_sdram32[offset / 4U];
         if (actual != expected) {
-            printf("FAILED! (@ Offset 0x%08X: Exp 0x%08X, Read 0x%08X)\r\n",
-                   (unsigned int)offset, (unsigned int)expected, (unsigned int)actual);
+            printf("FAILED! (@ Offset 0x%08X: Exp 0x%08X, Read 0x%08X [Low16:0x%04X, High16:0x%04X])\r\n",
+                   (unsigned int)offset, (unsigned int)expected, (unsigned int)actual,
+                   (unsigned int)(actual & 0xFFFFU), (unsigned int)((actual >> 16) & 0xFFFFU));
             return 2U;
         }
     }

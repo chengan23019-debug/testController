@@ -56,5 +56,7 @@ void DebugMon_Handler(void);
 void PendSV_Handler(void);
 /* this function handles SysTick exception */
 void SysTick_Handler(void);
+/* this function handles USART1 exception */
+void USART1_IRQHandler(void);
 
 #endif /* GD32F4XX_IT_H */

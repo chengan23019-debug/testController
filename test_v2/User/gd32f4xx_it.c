@@ -9,6 +9,7 @@
 #include "systick.h"
 #include "bsp_cs1237.h"
 #include "bsp_timer.h"
+#include "bsp_jsy_mk1031.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -122,4 +123,15 @@ void EXTI5_9_IRQHandler(void)
 void TIMER1_IRQHandler(void)
 {
     bsp_timer_irq_handler();
+}
+
+/*!
+    \brief      this function handles USART1 interrupt for JSY-MK-1031 Meter
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void USART1_IRQHandler(void)
+{
+    jsy_mk1031_uart_isr();
 }

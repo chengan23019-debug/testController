@@ -42,6 +42,7 @@
 #include "bsp_cs1237.h"
 #include "bsp_cs1238.h"
 #include "bsp_hlw8112.h"
+#include "bsp_jsy_mk1031.h"
 #include "bsp_timer.h"
 #include "bsp_sdram.h"
 #include "lwip_demo.h"
@@ -56,13 +57,19 @@
 /**
  * @brief  50Hz (20ms) 核心同步采集、数字滤波与遥测推流主任务
  */
+static void app_task_telemetry_50hz(void *pvParameters) __attribute__((unused));
 static void app_task_telemetry_50hz(void *pvParameters)
 {
     float torque_nm = 0.0f;
     float speed_rpm = 0.0f;
     float dc_v = 0.0f;
     float dc_i = 0.0f;
+    float ac_v = 0.0f;
+    float ac_i = 0.0f;
+    float ac_p = 0.0f;
+    float ac_pf = 0.0f;
     hlw8112_data_t ac_data;
+    jsy_mk1031_data_t jsy_data;
 
     (void)pvParameters;
 
@@ -75,14 +82,20 @@ static void app_task_telemetry_50hz(void *pvParameters)
         /* 2. 直流电参：读取 CS1238 并执行一阶 IIR 低通滤波 (alpha = 0.35) */
         cs1238_read_dc_filtered(&dc_v, &dc_i);
 
-        /* 3. 交流电参：50Hz 单次微秒级快速 SPI 读取 + Sanity Guard 坏帧拦截 */
+        /* 3. 交流/交直流电参：优先提取 JSY-MK-1031 (TTL Modbus-RTU) 最新快照，离线回退到 HLW8112 */
         hlw8112_read_data(&ac_data);
+        jsy_mk1031_get_data(&jsy_data);
+
+        ac_v  = jsy_data.is_online ? jsy_data.voltage : ac_data.voltage;
+        ac_i  = jsy_data.is_online ? jsy_data.current : ac_data.current_a;
+        ac_p  = jsy_data.is_online ? jsy_data.active_power : ac_data.active_power_a;
+        ac_pf = jsy_data.is_online ? jsy_data.power_factor : ac_data.power_factor;
 
         /* 4. 转速：读取定时器 M/T 硬件捕获结果 (零附加相位延迟) */
         speed_rpm = bsp_timer_get_speed_rpm();
 
         /* 5. 组装全传感器同步快照，原子更新全局数据中心 */
-        app_dyno_update_telemetry(torque_nm, speed_rpm, ac_data.voltage, ac_data.current_a, ac_data.active_power_a, ac_data.power_factor);
+        app_dyno_update_telemetry(torque_nm, speed_rpm, ac_v, ac_i, ac_p, ac_pf);
         app_dyno_update_dc(dc_v, dc_i);
     }
 }
@@ -182,6 +195,10 @@ int main(void)
     hlw8112_init();
     printf("HLW8112 AC Metering Initialized (CS: PB5, SCLK: PB6, SDI: PB7, SDO: PB8, EN: PB9)\r\n");
 
+    /* 4.1 Initialize JSY-MK-1031 AC/DC Metering Module (USART1: PD5-TX, PD6-RX, 9600 8-N-1) */
+    bsp_jsy_mk1031_init(9600);
+    printf("JSY-MK-1031 Meter Initialized (USART1: PD5-TX, PD6-RX, 9600 8-N-1)\r\n");
+
     /* 5. Initialize Speed Measurement Hardware Timer (TIMER1 / PA0) */
     bsp_timer_init();
     printf("Speed Timer Input Capture Initialized (PA0, TIMER1_CH0, HW Digital Filter Enabled)\r\n");
@@ -210,8 +227,11 @@ int main(void)
     /* Create Network Task (Priority 6, Stack 1024) */
     xTaskCreate(app_task_network, "NetworkTask", 1024, NULL, 6, NULL);
 
-    /* Create 50Hz (20ms) Unified Sampling & Telemetry Task (Priority 5, Stack 1024) */
-    xTaskCreate(app_task_telemetry_50hz, "Tele50HzTask", 1024, NULL, 5, NULL);
+    /* 临时注释 50Hz 遥测任务，专心调试 JSY-MK-1031 串口驱动 */
+    // xTaskCreate(app_task_telemetry_50hz, "Tele50HzTask", 1024, NULL, 5, NULL);
+
+    /* Create JSY-MK-1031 Modbus Meter Background Polling Task (Priority 5, Stack 1024) */
+    jsy_mk1031_create_task(5);
 
     /* 临时屏蔽测功机任务，防止它在空闲模式下把 DAC 刷新回 0V */
     // xTaskCreate(app_task_dyno_control, "DynoCtrlTask", 1024, NULL, 5, NULL);
